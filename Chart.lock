@@ -1,6 +1,0 @@
-dependencies:
-- name: nuc-common
-  repository: file://../../../universal-chart/charts/nuc-common
-  version: 0.1.1
-digest: sha256:c913a958aa429ea863d6e45eb9cf2c36777da8f311abf67f9f6c338dbc89a6f1
-generated: "2026-03-16T19:54:56.338523542+07:00"
