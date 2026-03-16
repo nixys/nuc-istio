@@ -1,0 +1,35 @@
+nameOverride: gateway-platform
+
+commonLabels:
+  platform: gateway-api
+  component: shared
+  tier: common
+
+commonAnnotations:
+  team: platform
+  note: common
+
+apiVersions:
+  gatewayClass: gateway.networking.k8s.io/v1beta1
+
+gateways:
+  - name: merged-gateway
+    apiVersion: example.net/v1alpha1
+    labels:
+      component: gateway
+      tier: edge
+    annotations:
+      note: external
+    spec:
+      gatewayClassName: public-gateway-class
+
+gatewayClasses:
+  - name: public-gateway-class
+    namespace: should-not-render
+    labels:
+      component: gateway-class
+    annotations:
+      note: public
+    spec:
+      controllerName: example.net/gateway-controller
+

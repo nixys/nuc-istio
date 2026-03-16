@@ -1,0 +1,7 @@
+.idea/
+tmp/
+test*.yml
+private/
+values-test.yaml
+__pycache__/
+*.pyc

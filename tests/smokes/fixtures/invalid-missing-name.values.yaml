@@ -1,0 +1,5 @@
+gateways:
+  - namespace: edge
+    spec:
+      gatewayClassName: public-gateway-class
+

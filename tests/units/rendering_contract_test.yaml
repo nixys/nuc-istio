@@ -1,0 +1,89 @@
+suite: rendering contract
+templates:
+  - templates/gateway.yaml
+  - templates/gatewayclass.yaml
+release:
+  name: unit-test
+  namespace: unit-namespace
+
+tests:
+  - it: renders no Gateway documents by default
+    template: templates/gateway.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders no GatewayClass documents by default
+    template: templates/gatewayclass.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: applies helper defaults and overrides for namespaced resources
+    values:
+      - values/rendering_contract.values.yaml
+    template: templates/gateway.yaml
+    documentSelector:
+      path: metadata.name
+      value: merged-gateway
+    asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: apiVersion
+          value: example.net/v1alpha1
+      - equal:
+          path: metadata.namespace
+          value: unit-namespace
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: gateway-platform
+      - equal:
+          path: metadata.labels.platform
+          value: gateway-api
+      - equal:
+          path: metadata.labels.component
+          value: gateway
+      - equal:
+          path: metadata.labels.tier
+          value: edge
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations.note
+          value: external
+      - equal:
+          path: spec.gatewayClassName
+          value: public-gateway-class
+
+  - it: renders cluster-scoped resources without namespace and with configured apiVersion
+    values:
+      - values/rendering_contract.values.yaml
+    template: templates/gatewayclass.yaml
+    documentSelector:
+      path: metadata.name
+      value: public-gateway-class
+    asserts:
+      - isKind:
+          of: GatewayClass
+      - equal:
+          path: apiVersion
+          value: gateway.networking.k8s.io/v1beta1
+      - notExists:
+          path: metadata.namespace
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: gateway-platform
+      - equal:
+          path: metadata.labels.component
+          value: gateway-class
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations.note
+          value: public
+      - equal:
+          path: spec.controllerName
+          value: example.net/gateway-controller

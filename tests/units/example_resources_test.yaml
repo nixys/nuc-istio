@@ -1,0 +1,241 @@
+suite: example resources
+templates:
+  - templates/backendtlspolicy.yaml
+  - templates/gatewayclass.yaml
+  - templates/gateway.yaml
+  - templates/grpcroute.yaml
+  - templates/httproute.yaml
+  - templates/listenerset.yaml
+  - templates/referencegrant.yaml
+  - templates/tlsroute.yaml
+release:
+  name: unit-test
+  namespace: unit-namespace
+
+tests:
+  - it: renders the expected document count per template
+    values:
+      - ../../values.yaml.example
+    asserts:
+      - hasDocuments:
+          count: 2
+        template: templates/backendtlspolicy.yaml
+      - hasDocuments:
+          count: 1
+        template: templates/gatewayclass.yaml
+      - hasDocuments:
+          count: 1
+        template: templates/gateway.yaml
+      - hasDocuments:
+          count: 1
+        template: templates/grpcroute.yaml
+      - hasDocuments:
+          count: 1
+        template: templates/httproute.yaml
+      - hasDocuments:
+          count: 1
+        template: templates/listenerset.yaml
+      - hasDocuments:
+          count: 1
+        template: templates/referencegrant.yaml
+      - hasDocuments:
+          count: 1
+        template: templates/tlsroute.yaml
+
+  - it: renders the expected example manifests
+    values:
+      - ../../values.yaml.example
+    asserts:
+      - containsDocument:
+          kind: BackendTLSPolicy
+          apiVersion: gateway.networking.k8s.io/v1
+          name: backend-tls-with-ca
+          namespace: app-a
+          any: true
+        template: templates/backendtlspolicy.yaml
+      - containsDocument:
+          kind: BackendTLSPolicy
+          apiVersion: gateway.networking.k8s.io/v1
+          name: backend-tls-with-wellknown
+          namespace: app-b
+          any: true
+        template: templates/backendtlspolicy.yaml
+      - containsDocument:
+          kind: GatewayClass
+          apiVersion: gateway.networking.k8s.io/v1
+          name: public-gateway-class
+          any: true
+        template: templates/gatewayclass.yaml
+      - containsDocument:
+          kind: Gateway
+          apiVersion: gateway.networking.k8s.io/v1
+          name: edge-gateway
+          namespace: edge-ns
+          any: true
+        template: templates/gateway.yaml
+      - containsDocument:
+          kind: GRPCRoute
+          apiVersion: gateway.networking.k8s.io/v1
+          name: inventory-grpc
+          namespace: apps
+          any: true
+        template: templates/grpcroute.yaml
+      - containsDocument:
+          kind: HTTPRoute
+          apiVersion: gateway.networking.k8s.io/v1
+          name: api-http
+          namespace: apps
+          any: true
+        template: templates/httproute.yaml
+      - containsDocument:
+          kind: ListenerSet
+          apiVersion: gateway.networking.k8s.io/v1
+          name: shared-listeners
+          namespace: apps
+          any: true
+        template: templates/listenerset.yaml
+      - containsDocument:
+          kind: ReferenceGrant
+          apiVersion: gateway.networking.k8s.io/v1
+          name: allow-backend-refs
+          namespace: backend
+          any: true
+        template: templates/referencegrant.yaml
+      - containsDocument:
+          kind: TLSRoute
+          apiVersion: gateway.networking.k8s.io/v1
+          name: passthrough-tls
+          namespace: apps
+          any: true
+        template: templates/tlsroute.yaml
+
+  - it: renders the GatewayClass example
+    values:
+      - ../../values.yaml.example
+    template: templates/gatewayclass.yaml
+    documentSelector:
+      path: metadata.name
+      value: public-gateway-class
+    asserts:
+      - isKind:
+          of: GatewayClass
+      - notExists:
+          path: metadata.namespace
+      - equal:
+          path: spec.controllerName
+          value: example.net/gateway-controller
+
+  - it: renders the Gateway example
+    values:
+      - ../../values.yaml.example
+    template: templates/gateway.yaml
+    documentSelector:
+      path: metadata.name
+      value: edge-gateway
+    asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: metadata.namespace
+          value: edge-ns
+      - equal:
+          path: spec.listeners[0].protocol
+          value: HTTPS
+
+  - it: renders the BackendTLSPolicy CA bundle example
+    values:
+      - ../../values.yaml.example
+    template: templates/backendtlspolicy.yaml
+    documentSelector:
+      path: metadata.name
+      value: backend-tls-with-ca
+    asserts:
+      - isKind:
+          of: BackendTLSPolicy
+      - equal:
+          path: spec.validation.caCertificateRefs[0].name
+          value: payments-ca
+
+  - it: renders the BackendTLSPolicy well-known CA example
+    values:
+      - ../../values.yaml.example
+    template: templates/backendtlspolicy.yaml
+    documentSelector:
+      path: metadata.name
+      value: backend-tls-with-wellknown
+    asserts:
+      - isKind:
+          of: BackendTLSPolicy
+      - equal:
+          path: spec.validation.wellKnownCACertificates
+          value: System
+
+  - it: renders the GRPCRoute example
+    values:
+      - ../../values.yaml.example
+    template: templates/grpcroute.yaml
+    documentSelector:
+      path: metadata.name
+      value: inventory-grpc
+    asserts:
+      - isKind:
+          of: GRPCRoute
+      - equal:
+          path: spec.rules[0].sessionPersistence.type
+          value: Header
+
+  - it: renders the HTTPRoute example
+    values:
+      - ../../values.yaml.example
+    template: templates/httproute.yaml
+    documentSelector:
+      path: metadata.name
+      value: api-http
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[4].cors.maxAge
+          value: 86400
+
+  - it: renders the ListenerSet example
+    values:
+      - ../../values.yaml.example
+    template: templates/listenerset.yaml
+    documentSelector:
+      path: metadata.name
+      value: shared-listeners
+    asserts:
+      - isKind:
+          of: ListenerSet
+      - equal:
+          path: spec.parentRef.name
+          value: edge-gateway
+
+  - it: renders the ReferenceGrant example
+    values:
+      - ../../values.yaml.example
+    template: templates/referencegrant.yaml
+    documentSelector:
+      path: metadata.name
+      value: allow-backend-refs
+    asserts:
+      - isKind:
+          of: ReferenceGrant
+      - equal:
+          path: spec.to[1].kind
+          value: Secret
+
+  - it: renders the TLSRoute example
+    values:
+      - ../../values.yaml.example
+    template: templates/tlsroute.yaml
+    documentSelector:
+      path: metadata.name
+      value: passthrough-tls
+    asserts:
+      - isKind:
+          of: TLSRoute
+      - equal:
+          path: spec.rules[0].backendRefs[1].port
+          value: 8443
