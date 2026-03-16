@@ -3,6 +3,14 @@
 {{- $_ := set $tplContext "Values" (mergeOverwrite (deepCopy $.Values.global) $.Values) -}}
 {{- end }}
 {{- range $host, $virtualservice := .Values.virtualservices }}
+{{- $labels := include "helpers.app.labels" $ | fromYaml | default dict -}}
+{{- with $virtualservice.labels }}
+{{- $labels = mergeOverwrite $labels (include "helpers.tplvalues.render" (dict "value" . "context" $tplContext) | fromYaml) -}}
+{{- end }}
+{{- $annotations := include "helpers.app.genericAnnotations" $ | fromYaml | default dict -}}
+{{- with $virtualservice.annotations }}
+{{- $annotations = mergeOverwrite $annotations (include "helpers.tplvalues.render" (dict "value" . "context" $tplContext) | fromYaml) -}}
+{{- end }}
 ---
 apiVersion: {{ include "helpers.capabilities.istiovirtualservice.apiVersion" $ }}
 kind: VirtualService
@@ -10,11 +18,9 @@ metadata:
   name: {{ include "helpers.tplvalues.render" (dict "value" ($virtualservice.name | default $host) "context" $tplContext) }}
   namespace: {{ $.Release.Namespace | quote }}
   labels:
-    {{- include "helpers.app.labels" $ | nindent 4 }}
-    {{- with $virtualservice.labels }}{{- include "helpers.tplvalues.render" (dict "value" . "context" $tplContext) | nindent 4 }}{{- end }}
+    {{- toYaml $labels | nindent 4 }}
   annotations:
-    {{- include "helpers.app.genericAnnotations" $ | indent 4 }}
-    {{- with $virtualservice.annotations }}{{- include "helpers.tplvalues.render" (dict "value" . "context" $tplContext) | nindent 4 }}{{- end }}
+    {{- toYaml $annotations | nindent 4 }}
 spec:
   hosts:
     {{- range $h := $virtualservice.hosts }}
@@ -70,7 +76,7 @@ spec:
   {{- end }}
   {{- if $virtualservice.tcp }}
   tcp:
-    {{- range $tcpRoute := . }}
+    {{- range $tcpRoute := $virtualservice.tcp }}
     - {{- toYaml $tcpRoute | nindent 6 }}
     {{- end }}
   {{- end }} {{/* end with $virtualservice.tcp */}}

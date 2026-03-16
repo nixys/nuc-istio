@@ -11,17 +11,15 @@ DEFAULT_SCHEMA_LOCATION = (
 SCENARIO_CHOICES = [
     "all",
     "default-empty",
-    "schema-invalid-missing-name",
     "rendering-contract",
     "example-render",
-    "example-kubeconform",
 ]
 
 
 def build_parser() -> argparse.ArgumentParser:
     repo_root = Path(__file__).resolve().parents[3]
     parser = argparse.ArgumentParser(
-        description="Run nxs-universal-chart-style smoke tests for the nuc-native-gateway chart."
+        description="Run smoke tests for the nuc-istio chart."
     )
     parser.add_argument(
         "--chart-dir",
@@ -47,26 +45,26 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--kube-version",
         default=os.environ.get("KUBE_VERSION", "1.30.0"),
-        help="Kubernetes version passed to kubeconform.",
+        help="Unused compatibility option kept for smoke runner parity.",
     )
     parser.add_argument(
         "--kubeconform-bin",
         default=os.environ.get("KUBECONFORM_BIN", "kubeconform"),
-        help="kubeconform binary path or command name.",
+        help="Unused compatibility option kept for smoke runner parity.",
     )
     parser.add_argument(
         "--schema-location",
         default=os.environ.get(
             "KUBECONFORM_CRD_SCHEMA_LOCATION", DEFAULT_SCHEMA_LOCATION
         ),
-        help="Additional kubeconform schema location for Gateway API CRDs.",
+        help="Unused compatibility option kept for smoke runner parity.",
     )
     parser.add_argument(
         "--skip-kinds",
         default=os.environ.get(
             "KUBECONFORM_SKIP_KINDS", "ListenerSet,ReferenceGrant,TLSRoute"
         ),
-        help="Comma-separated kinds to skip in kubeconform.",
+        help="Unused compatibility option kept for smoke runner parity.",
     )
     parser.add_argument(
         "--workdir",

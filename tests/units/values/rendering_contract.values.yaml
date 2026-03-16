@@ -1,34 +1,79 @@
-nameOverride: gateway-platform
+nameOverride: istio-platform
 
-commonLabels:
-  platform: gateway-api
-  component: shared
-  tier: common
+generic:
+  labels:
+    platform: edge
+    component: shared
+  annotations:
+    owner: platform-team
+    note: inherited
 
-commonAnnotations:
-  team: platform
-  note: common
-
-apiVersions:
-  gatewayClass: gateway.networking.k8s.io/v1beta1
+global:
+  domain: corp.example.org
+  apiVersions:
+    istioGateway: custom.istio.io/v1alpha1
+    istioVirtualService: custom.istio.io/v1alpha1
+    istioDestinationRule: custom.istio.io/v1alpha1
 
 gateways:
-  - name: merged-gateway
-    apiVersion: example.net/v1alpha1
+  edge:
+    name: edge-gateway
     labels:
       component: gateway
       tier: edge
     annotations:
       note: external
-    spec:
-      gatewayClassName: public-gateway-class
+    selector:
+      istio: ingressgateway
+    servers:
+      - port:
+          number: 80
+          name: http
+          protocol: HTTP
+        hosts:
+          - '{{ .Values.global.domain }}'
 
-gatewayClasses:
-  - name: public-gateway-class
-    namespace: should-not-render
+virtualservices:
+  edge:
+    name: '{{ .Release.Name }}-edge'
     labels:
-      component: gateway-class
+      component: routing
     annotations:
       note: public
-    spec:
-      controllerName: example.net/gateway-controller
+    hosts:
+      - '{{ .Values.global.domain }}'
+    gateways:
+      - edge-gateway
+    http:
+      - name: root
+        route:
+          - destination:
+              host: edge.default.svc.cluster.local
+              port:
+                number: 80
+    exportTo:
+      - '.'
+
+destinationrules:
+  edge:
+    name: edge-destination
+    labels:
+      component: policy
+    annotations:
+      note: destination
+    host: edge.default.svc.cluster.local
+    trafficPolicy:
+      loadBalancer:
+        simple: ROUND_ROBIN
+    subsets:
+      - name: stable
+        labels:
+          version: stable
+        trafficPolicy:
+          loadBalancer:
+            simple: LEAST_CONN
+    exportTo:
+      - '.'
+    workloadSelector:
+      matchLabels:
+        app: edge

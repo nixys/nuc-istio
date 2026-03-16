@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from tests.smokes.steps import chart, helm, kubeconform, render, system
+from tests.smokes.steps import chart, helm, render, system
 
 
 @dataclass
@@ -21,16 +21,12 @@ class SmokeContext:
     skip_kinds: str
 
     @property
-    def example_values(self) -> Path:
-        return self.repo_root / "values.yaml.example"
-
-    @property
     def rendering_contract_values(self) -> Path:
         return self.repo_root / "tests" / "smokes" / "fixtures" / "rendering-contract.values.yaml"
 
     @property
-    def invalid_missing_name_values(self) -> Path:
-        return self.repo_root / "tests" / "smokes" / "fixtures" / "invalid-missing-name.values.yaml"
+    def example_values(self) -> Path:
+        return self.repo_root / "tests" / "smokes" / "fixtures" / "example.values.yaml"
 
 
 def check_default_empty(context: SmokeContext) -> None:
@@ -45,25 +41,6 @@ def check_default_empty(context: SmokeContext) -> None:
     )
     documents = render.load_documents(output_path)
     render.assert_doc_count(documents, 0)
-
-
-def check_schema_invalid_missing_name(context: SmokeContext) -> None:
-    result = helm.lint(
-        context.chart_dir,
-        values_file=context.invalid_missing_name_values,
-        workdir=context.workdir,
-        check=False,
-    )
-    if result.returncode == 0:
-        raise system.TestFailure(
-            "helm lint unexpectedly succeeded for invalid values without resource name"
-        )
-
-    combined_output = f"{result.stdout}\n{result.stderr}"
-    if "name" not in combined_output:
-        raise system.TestFailure(
-            "helm lint failed for invalid values, but the error does not mention the missing name field"
-        )
 
 
 def check_rendering_contract(context: SmokeContext) -> None:
@@ -83,39 +60,52 @@ def check_rendering_contract(context: SmokeContext) -> None:
     )
 
     documents = render.load_documents(output_path)
-    render.assert_doc_count(documents, 2)
+    render.assert_doc_count(documents, 3)
 
-    gateway = render.select_document(documents, kind="Gateway", name="merged-gateway")
-    render.assert_path(gateway, "apiVersion", "example.net/v1alpha1")
+    gateway = render.select_document(
+        documents, kind="Gateway", name="istio-platform-edge-gateway"
+    )
+    render.assert_path(gateway, "apiVersion", "custom.istio.io/v1alpha1")
     render.assert_path(gateway, "metadata.namespace", context.namespace)
     render.assert_path(
         gateway,
         "metadata.labels[app.kubernetes.io/name]",
-        "gateway-platform",
+        "istio-platform",
     )
-    render.assert_path(gateway, "metadata.labels.platform", "gateway-api")
+    render.assert_path(gateway, "metadata.labels[app.kubernetes.io/instance]", context.release_name)
+    render.assert_path(gateway, "metadata.labels.platform", "edge")
     render.assert_path(gateway, "metadata.labels.component", "gateway")
     render.assert_path(gateway, "metadata.labels.tier", "edge")
-    render.assert_path(gateway, "metadata.annotations.team", "platform")
+    render.assert_path(gateway, "metadata.annotations.owner", "platform-team")
     render.assert_path(gateway, "metadata.annotations.note", "external")
-    render.assert_path(gateway, "spec.gatewayClassName", "public-gateway-class")
+    render.assert_path(gateway, "spec.selector.istio", "ingressgateway")
+    render.assert_path(gateway, "spec.servers[0].hosts[0]", "corp.example.org")
 
-    gateway_class = render.select_document(
-        documents, kind="GatewayClass", name="public-gateway-class"
+    virtual_service = render.select_document(
+        documents, kind="VirtualService", name=f"{context.release_name}-edge"
     )
-    render.assert_path(gateway_class, "apiVersion", "gateway.networking.k8s.io/v1beta1")
-    render.assert_path_missing(gateway_class, "metadata.namespace")
-    render.assert_path(
-        gateway_class,
-        "metadata.labels[app.kubernetes.io/name]",
-        "gateway-platform",
+    render.assert_path(virtual_service, "apiVersion", "custom.istio.io/v1alpha1")
+    render.assert_path(virtual_service, "metadata.namespace", context.namespace)
+    render.assert_path(virtual_service, "metadata.labels[app.kubernetes.io/name]", "istio-platform")
+    render.assert_path(virtual_service, "metadata.labels.component", "routing")
+    render.assert_path(virtual_service, "metadata.annotations.note", "public")
+    render.assert_path(virtual_service, "spec.hosts[0]", "corp.example.org")
+    render.assert_path(virtual_service, "spec.gateways[0]", "edge-gateway")
+    render.assert_path(virtual_service, "spec.http[0].route[0].destination.host", "edge.default.svc.cluster.local")
+    render.assert_path(virtual_service, "spec.exportTo[0]", ".")
+
+    destination_rule = render.select_document(
+        documents, kind="DestinationRule", name="istio-platform-edge-destination"
     )
-    render.assert_path(gateway_class, "metadata.labels.component", "gateway-class")
-    render.assert_path(gateway_class, "metadata.annotations.team", "platform")
-    render.assert_path(gateway_class, "metadata.annotations.note", "public")
-    render.assert_path(
-        gateway_class, "spec.controllerName", "example.net/gateway-controller"
-    )
+    render.assert_path(destination_rule, "apiVersion", "custom.istio.io/v1alpha1")
+    render.assert_path(destination_rule, "metadata.namespace", context.namespace)
+    render.assert_path(destination_rule, "metadata.labels[app.kubernetes.io/name]", "istio-platform")
+    render.assert_path(destination_rule, "metadata.labels.component", "policy")
+    render.assert_path(destination_rule, "metadata.annotations.note", "destination")
+    render.assert_path(destination_rule, "spec.host", "edge.default.svc.cluster.local")
+    render.assert_path(destination_rule, "spec.subsets[0].name", "stable")
+    render.assert_path(destination_rule, "spec.subsets[0].labels.version", "stable")
+    render.assert_path(destination_rule, "spec.workloadSelector.matchLabels.app", "edge")
 
 
 def check_example_render(context: SmokeContext) -> None:
@@ -135,69 +125,53 @@ def check_example_render(context: SmokeContext) -> None:
     )
 
     documents = render.load_documents(output_path)
-    render.assert_doc_count(documents, 9)
+    render.assert_doc_count(documents, 3)
     render.assert_kinds(
         documents,
         {
-            "BackendTLSPolicy",
-            "GatewayClass",
             "Gateway",
-            "GRPCRoute",
-            "HTTPRoute",
-            "ListenerSet",
-            "ReferenceGrant",
-            "TLSRoute",
+            "VirtualService",
+            "DestinationRule",
         },
     )
 
-    gateway_class = render.select_document(
-        documents, kind="GatewayClass", name="public-gateway-class"
+    gateway = render.select_document(
+        documents, kind="Gateway", name="istio-platform-public-gateway"
     )
-    render.assert_path_missing(gateway_class, "metadata.namespace")
+    render.assert_path(gateway, "metadata.namespace", context.namespace)
+    render.assert_path(gateway, "metadata.labels[app.kubernetes.io/name]", "istio-platform")
+    render.assert_path(gateway, "spec.servers[0].hosts[0]", "example.org")
+    render.assert_path(gateway, "spec.servers[1].tls.credentialName", "public-gateway-tls")
 
-    gateway = render.select_document(documents, kind="Gateway", name="edge-gateway")
-    render.assert_path(gateway, "metadata.namespace", "edge-ns")
-    render.assert_path(gateway, "spec.listeners[0].protocol", "HTTPS")
-
-    backend_tls = render.select_document(
-        documents, kind="BackendTLSPolicy", name="backend-tls-with-wellknown"
+    virtual_service = render.select_document(
+        documents, kind="VirtualService", name=f"{context.release_name}-public"
     )
-    render.assert_path(
-        backend_tls, "spec.validation.wellKnownCACertificates", "System"
+    render.assert_path(virtual_service, "metadata.namespace", context.namespace)
+    render.assert_path(virtual_service, "metadata.labels[app.kubernetes.io/name]", "istio-platform")
+    render.assert_path(virtual_service, "spec.hosts[1]", "api.example.org")
+    render.assert_path(virtual_service, "spec.gateways[1]", "mesh")
+    render.assert_path(virtual_service, "spec.http[0].retries.attempts", 3)
+    render.assert_path(virtual_service, "spec.http[0].timeout", "10s")
+    render.assert_path(virtual_service, "spec.http[0].rewrite.uri", "/")
+    render.assert_path(virtual_service, "spec.http[1].fault.abort.httpStatus", 503)
+    render.assert_path(virtual_service, "spec.tls[0].match[0].sniHosts[0]", "secure.example.org")
+    render.assert_path(virtual_service, "spec.tcp[0].route[0].destination.host", "mysql.default.svc.cluster.local")
+
+    destination_rule = render.select_document(
+        documents, kind="DestinationRule", name="istio-platform-api-destination"
     )
-
-    http_route = render.select_document(documents, kind="HTTPRoute", name="api-http")
-    render.assert_path(http_route, "spec.rules[0].filters[4].cors.maxAge", 86400)
-
-    tls_route = render.select_document(documents, kind="TLSRoute", name="passthrough-tls")
-    render.assert_path(tls_route, "spec.rules[0].backendRefs[1].port", 8443)
-
-
-def check_example_kubeconform(context: SmokeContext) -> None:
-    output_path = context.render_dir / "example-kubeconform.yaml"
-    helm.template(
-        context.chart_dir,
-        release_name=context.release_name,
-        namespace=context.namespace,
-        values_file=context.example_values,
-        output_path=output_path,
-        workdir=context.workdir,
-    )
-    kubeconform.validate(
-        manifest_path=output_path,
-        kube_version=context.kube_version,
-        kubeconform_bin=context.kubeconform_bin,
-        schema_location=context.schema_location,
-        skip_kinds=context.skip_kinds,
-    )
+    render.assert_path(destination_rule, "metadata.namespace", context.namespace)
+    render.assert_path(destination_rule, "metadata.labels[app.kubernetes.io/name]", "istio-platform")
+    render.assert_path(destination_rule, "spec.trafficPolicy.loadBalancer.simple", "ROUND_ROBIN")
+    render.assert_path(destination_rule, "spec.subsets[0].trafficPolicy.loadBalancer.simple", "LEAST_CONN")
+    render.assert_path(destination_rule, "spec.exportTo[1]", "observability")
+    render.assert_path(destination_rule, "spec.workloadSelector.matchLabels.app", "api")
 
 
 SCENARIOS: list[tuple[str, Callable[[SmokeContext], None]]] = [
     ("default-empty", check_default_empty),
-    ("schema-invalid-missing-name", check_schema_invalid_missing_name),
     ("rendering-contract", check_rendering_contract),
     ("example-render", check_example_render),
-    ("example-kubeconform", check_example_kubeconform),
 ]
 
 

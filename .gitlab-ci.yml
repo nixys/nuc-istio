@@ -33,6 +33,7 @@ lint:
 unit_tests:
   stage: unit-tests
   script:
+    - helm dependency build .
     - helm plugin install https://github.com/helm-unittest/helm-unittest.git --verify=false
     - helm unittest -f 'tests/units/*_test.yaml' .
 

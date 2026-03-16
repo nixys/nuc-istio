@@ -4,3 +4,7 @@ description: A Helm chart for Kubernetes
 name: nuc-istio
 type: application
 version: 0.1.2
+dependencies:
+  - name: nuc-common
+    version: 0.1.1
+    repository: "file://../../../universal-chart/charts/nuc-common"

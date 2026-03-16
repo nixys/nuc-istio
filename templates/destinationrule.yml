@@ -1,4 +1,12 @@
 {{- range $host, $destinationrule := .Values.destinationrules }}
+{{- $labels := include "helpers.app.labels" $ | fromYaml | default dict -}}
+{{- with $destinationrule.labels }}
+{{- $labels = mergeOverwrite $labels (include "helpers.tplvalues.render" (dict "value" . "context" $) | fromYaml) -}}
+{{- end }}
+{{- $annotations := include "helpers.app.genericAnnotations" $ | fromYaml | default dict -}}
+{{- with $destinationrule.annotations }}
+{{- $annotations = mergeOverwrite $annotations (include "helpers.tplvalues.render" (dict "value" . "context" $) | fromYaml) -}}
+{{- end }}
 ---
 apiVersion: {{ include "helpers.capabilities.istiodestinationrule.apiVersion" $ }}
 kind: DestinationRule
@@ -6,11 +14,9 @@ metadata:
   name: {{ include "helpers.app.fullname" (dict "name" ($destinationrule.name | default $host) "context" $) }}
   namespace: {{ $.Release.Namespace | quote }}
   labels:
-    {{- include "helpers.app.labels" $ | nindent 4 }}
-    {{- with $destinationrule.labels }}{{- include "helpers.tplvalues.render" (dict "value" . "context" $) | nindent 4 }}{{- end }}
+    {{- toYaml $labels | nindent 4 }}
   annotations:
-    {{- include "helpers.app.genericAnnotations" $ | indent 4 }}
-    {{- with $destinationrule.annotations }}{{- include "helpers.tplvalues.render" (dict "value" . "context" $) | nindent 4 }}{{- end }}
+    {{- toYaml $annotations | nindent 4 }}
 spec:
   host: {{ $destinationrule.host | quote }}
   trafficPolicy:

@@ -3,6 +3,14 @@
 {{- $_ := set $tplContext "Values" (mergeOverwrite (deepCopy $.Values.global) $.Values) -}}
 {{- end }}
 {{- range $host, $gateway := .Values.gateways }}
+{{- $labels := include "helpers.app.labels" $ | fromYaml | default dict -}}
+{{- with $gateway.labels }}
+{{- $labels = mergeOverwrite $labels (include "helpers.tplvalues.render" (dict "value" . "context" $tplContext) | fromYaml) -}}
+{{- end }}
+{{- $annotations := include "helpers.app.genericAnnotations" $ | fromYaml | default dict -}}
+{{- with $gateway.annotations }}
+{{- $annotations = mergeOverwrite $annotations (include "helpers.tplvalues.render" (dict "value" . "context" $tplContext) | fromYaml) -}}
+{{- end }}
 ---
 apiVersion: {{ include "helpers.capabilities.istiogateway.apiVersion" $ }}
 kind: Gateway
@@ -10,11 +18,9 @@ metadata:
   name: {{ include "helpers.app.fullname" (dict "name" ($gateway.name | default $host) "context" $) }}
   namespace: {{ $.Release.Namespace | quote }}
   labels:
-    {{- include "helpers.app.labels" $ | nindent 4 }}
-    {{- with $gateway.labels }}{{- include "helpers.tplvalues.render" (dict "value" . "context" $tplContext) | nindent 4 }}{{- end }}
+    {{- toYaml $labels | nindent 4 }}
   annotations:
-    {{- include "helpers.app.genericAnnotations" $ | indent 4 }}
-    {{- with $gateway.annotations }}{{- include "helpers.tplvalues.render" (dict "value" . "context" $tplContext) | nindent 4 }}{{- end }}
+    {{- toYaml $annotations | nindent 4 }}
 spec:
   selector:
     {{- include "helpers.tplvalues.render" (dict "value" $gateway.selector "context" $tplContext) | nindent 4 }}

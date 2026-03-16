@@ -1,46 +1,53 @@
 suite: rendering contract
 templates:
-  - templates/gateway.yaml
-  - templates/gatewayclass.yaml
+  - templates/gateway.yml
+  - templates/virtualservice.yml
+  - templates/destinationrule.yml
 release:
   name: unit-test
   namespace: unit-namespace
 
 tests:
   - it: renders no Gateway documents by default
-    template: templates/gateway.yaml
+    template: templates/gateway.yml
     asserts:
       - hasDocuments:
           count: 0
 
-  - it: renders no GatewayClass documents by default
-    template: templates/gatewayclass.yaml
+  - it: renders no VirtualService documents by default
+    template: templates/virtualservice.yml
     asserts:
       - hasDocuments:
           count: 0
 
-  - it: applies helper defaults and overrides for namespaced resources
+  - it: renders no DestinationRule documents by default
+    template: templates/destinationrule.yml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: applies helper defaults and overrides for Gateway
     values:
       - values/rendering_contract.values.yaml
-    template: templates/gateway.yaml
+    template: templates/gateway.yml
     documentSelector:
       path: metadata.name
-      value: merged-gateway
+      value: istio-platform-edge-gateway
     asserts:
       - isKind:
           of: Gateway
       - equal:
           path: apiVersion
-          value: example.net/v1alpha1
+          value: custom.istio.io/v1alpha1
       - equal:
           path: metadata.namespace
           value: unit-namespace
       - equal:
           path: metadata.labels["app.kubernetes.io/name"]
-          value: gateway-platform
+          value: istio-platform
       - equal:
           path: metadata.labels.platform
-          value: gateway-api
+          value: edge
       - equal:
           path: metadata.labels.component
           value: gateway
@@ -48,42 +55,90 @@ tests:
           path: metadata.labels.tier
           value: edge
       - equal:
-          path: metadata.annotations.team
-          value: platform
+          path: metadata.annotations.owner
+          value: platform-team
       - equal:
           path: metadata.annotations.note
           value: external
       - equal:
-          path: spec.gatewayClassName
-          value: public-gateway-class
+          path: spec.selector.istio
+          value: ingressgateway
+      - equal:
+          path: spec.servers[0].hosts[0]
+          value: corp.example.org
 
-  - it: renders cluster-scoped resources without namespace and with configured apiVersion
+  - it: applies helper defaults and overrides for VirtualService
     values:
       - values/rendering_contract.values.yaml
-    template: templates/gatewayclass.yaml
+    template: templates/virtualservice.yml
     documentSelector:
       path: metadata.name
-      value: public-gateway-class
+      value: unit-test-edge
     asserts:
       - isKind:
-          of: GatewayClass
+          of: VirtualService
       - equal:
           path: apiVersion
-          value: gateway.networking.k8s.io/v1beta1
-      - notExists:
+          value: custom.istio.io/v1alpha1
+      - equal:
           path: metadata.namespace
+          value: unit-namespace
       - equal:
           path: metadata.labels["app.kubernetes.io/name"]
-          value: gateway-platform
+          value: istio-platform
       - equal:
           path: metadata.labels.component
-          value: gateway-class
-      - equal:
-          path: metadata.annotations.team
-          value: platform
+          value: routing
       - equal:
           path: metadata.annotations.note
           value: public
       - equal:
-          path: spec.controllerName
-          value: example.net/gateway-controller
+          path: spec.hosts[0]
+          value: corp.example.org
+      - equal:
+          path: spec.gateways[0]
+          value: edge-gateway
+      - equal:
+          path: spec.http[0].route[0].destination.host
+          value: edge.default.svc.cluster.local
+      - equal:
+          path: spec.exportTo[0]
+          value: .
+
+  - it: applies helper defaults and overrides for DestinationRule
+    values:
+      - values/rendering_contract.values.yaml
+    template: templates/destinationrule.yml
+    documentSelector:
+      path: metadata.name
+      value: istio-platform-edge-destination
+    asserts:
+      - isKind:
+          of: DestinationRule
+      - equal:
+          path: apiVersion
+          value: custom.istio.io/v1alpha1
+      - equal:
+          path: metadata.namespace
+          value: unit-namespace
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: istio-platform
+      - equal:
+          path: metadata.labels.component
+          value: policy
+      - equal:
+          path: metadata.annotations.note
+          value: destination
+      - equal:
+          path: spec.host
+          value: edge.default.svc.cluster.local
+      - equal:
+          path: spec.subsets[0].name
+          value: stable
+      - equal:
+          path: spec.subsets[0].labels.version
+          value: stable
+      - equal:
+          path: spec.workloadSelector.matchLabels.app
+          value: edge
