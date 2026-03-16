@@ -19,10 +19,10 @@ metadata:
     {{- toYaml $annotations | nindent 4 }}
 spec:
   host: {{ $destinationrule.host | quote }}
+  {{- with $destinationrule.trafficPolicy }}
   trafficPolicy:
-    {{- with $destinationrule.trafficPolicy }}
     {{- toYaml . | nindent 4 }}
-    {{- end }}
+  {{- end }}
   {{- if $destinationrule.subsets }}
   subsets:
     {{- range $subset := $destinationrule.subsets }}
@@ -31,10 +31,10 @@ spec:
         {{- range $key, $value := $subset.labels }}
         {{ $key }}: {{ $value | quote }}
         {{- end }}
+      {{- with $subset.trafficPolicy }}
       trafficPolicy:
-        {{- with $subset.trafficPolicy }}
         {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- end }}
     {{- end }}
   {{- end }}
   {{- if $destinationrule.exportTo }}
