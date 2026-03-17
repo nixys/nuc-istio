@@ -79,11 +79,7 @@ Global controls:
 
 This section is generated from [values.yaml](values.yaml) by `helm-docs`. Edit [values.yaml](values.yaml) comments or [docs/README.md.gotmpl](docs/README.md.gotmpl), then run `pre-commit run helm-docs --all-files` to refresh it.
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| destinationrules | object | `{}` |  |
-| gateways | object | `{}` |  |
-| virtualservices | object | `{}` |  |
+{{ template "chart.valuesTable" . }}
 
 ## Representative Values Files
 

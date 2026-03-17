@@ -1,0 +1,380 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "nameOverride": {
+      "type": "string"
+    },
+    "generic": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "labels": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "annotations": {
+          "$ref": "#/definitions/stringMap"
+        }
+      }
+    },
+    "global": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "domain": {
+          "type": "string"
+        },
+        "apiVersions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "istioGateway": {
+              "type": "string"
+            },
+            "istioVirtualService": {
+              "type": "string"
+            },
+            "istioDestinationRule": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "gateways": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/gateway"
+      }
+    },
+    "virtualservices": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/virtualService"
+      }
+    },
+    "destinationrules": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/destinationRule"
+      }
+    }
+  },
+  "definitions": {
+    "stringMap": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "port": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "number",
+        "name",
+        "protocol"
+      ],
+      "properties": {
+        "number": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string"
+        }
+      }
+    },
+    "gatewayServer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "port",
+        "hosts"
+      ],
+      "properties": {
+        "port": {
+          "$ref": "#/definitions/port"
+        },
+        "hosts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "tls": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "gateway": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selector",
+        "servers"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "annotations": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "selector": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "servers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/gatewayServer"
+          }
+        }
+      }
+    },
+    "virtualServiceHttpRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "match": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "route": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "retries": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "fault": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "timeout": {
+          "type": "string"
+        },
+        "rewrite": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "corsPolicy": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "virtualServiceTlsRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route"
+      ],
+      "properties": {
+        "match": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "route": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    "virtualServiceTcpRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route"
+      ],
+      "properties": {
+        "match": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "route": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    "virtualService": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hosts",
+        "gateways"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "annotations": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "hosts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "gateways": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "http": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/virtualServiceHttpRoute"
+          }
+        },
+        "tls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/virtualServiceTlsRoute"
+          }
+        },
+        "tcp": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/virtualServiceTcpRoute"
+          }
+        },
+        "exportTo": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "http"
+          ]
+        },
+        {
+          "required": [
+            "tls"
+          ]
+        },
+        {
+          "required": [
+            "tcp"
+          ]
+        }
+      ]
+    },
+    "destinationRuleSubset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "labels"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "trafficPolicy": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "destinationRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "annotations": {
+          "$ref": "#/definitions/stringMap"
+        },
+        "host": {
+          "type": "string"
+        },
+        "trafficPolicy": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "subsets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/destinationRuleSubset"
+          }
+        },
+        "exportTo": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "workloadSelector": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "matchLabels"
+          ],
+          "properties": {
+            "matchLabels": {
+              "$ref": "#/definitions/stringMap"
+            }
+          }
+        }
+      }
+    }
+  }
+}
