@@ -6,5 +6,5 @@ type: application
 version: 0.1.2
 dependencies:
   - name: nuc-common
-    version: 1.0.0-rc6
+    version: 1.0.0-rc5
     repository: "https://registry.nixys.ru/chartrepo/public"
