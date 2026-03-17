@@ -6,5 +6,5 @@ type: application
 version: 0.1.2
 dependencies:
   - name: nuc-common
-    version: 0.1.1
-    repository: "file://charts/nuc-common"
+    version: 1.0.0-rc6
+    repository: "https://registry.nixys.ru"
