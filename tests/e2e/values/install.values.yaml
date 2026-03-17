@@ -1,0 +1,56 @@
+nameOverride: e2e
+
+generic:
+  labels:
+    test-suite: e2e
+  annotations:
+    test-suite: e2e
+
+global:
+  apiVersions:
+    istioGateway: networking.istio.io/v1beta1
+    istioVirtualService: networking.istio.io/v1beta1
+    istioDestinationRule: networking.istio.io/v1beta1
+
+gateways:
+  public:
+    name: public-gateway
+    selector:
+      istio: ingressgateway
+    servers:
+      - port:
+          number: 80
+          name: http
+          protocol: HTTP
+        hosts:
+          - e2e.example.internal
+
+virtualservices:
+  public:
+    name: e2e-public-route
+    hosts:
+      - e2e.example.internal
+    gateways:
+      - public-gateway
+    http:
+      - name: api
+        match:
+          - uri:
+              prefix: /
+        route:
+          - destination:
+              host: e2e-backend.default.svc.cluster.local
+              port:
+                number: 8080
+
+destinationrules:
+  api:
+    name: api-destination
+    host: e2e-backend.default.svc.cluster.local
+    trafficPolicy:
+      loadBalancer:
+        simple: ROUND_ROBIN
+    subsets:
+      - name: v1
+        labels:
+          version: v1
