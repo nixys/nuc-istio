@@ -1,0 +1,139 @@
+# NUC Native Gateway
+
+Helm chart for rendering Kubernetes Gateway API resources from declarative values.
+
+The chart does not install Gateway API CRDs or any controller. It only renders Gateway API objects that are already supported by the target cluster and controller.
+
+## Quick Start
+
+Render the example configuration:
+
+```bash
+helm template nuc-native-gateway . -f values.yaml.example
+```
+
+Install the chart:
+
+```bash
+helm install nuc-native-gateway . \
+  --namespace gateway-system \
+  --create-namespace \
+  -f values.yaml.example
+```
+
+Install the local README generator hook:
+
+```bash
+pre-commit install
+pre-commit install-hooks
+```
+
+## Supported Resources
+
+The chart can render these Gateway API kinds:
+
+- `BackendTLSPolicy`
+- `GatewayClass`
+- `Gateway`
+- `GRPCRoute`
+- `HTTPRoute`
+- `ListenerSet`
+- `ReferenceGrant`
+- `TLSRoute`
+
+Support for individual kinds and fields still depends on the Gateway API bundle and controller installed in the cluster.
+
+## Values Model
+
+Each top-level list in [values.yaml](values.yaml) maps to one resource kind:
+
+- `backendTLSPolicies`
+- `gatewayClasses`
+- `gateways`
+- `grpcRoutes`
+- `httpRoutes`
+- `listenerSets`
+- `referenceGrants`
+- `tlsRoutes`
+
+Every list item uses the same generic contract:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | yes | Resource name. |
+| `namespace` | no | Namespace for namespaced resources. Defaults to the Helm release namespace. Ignored for cluster-scoped resources. |
+| `labels` | no | Labels merged on top of built-in chart labels and `commonLabels`. |
+| `annotations` | no | Annotations merged on top of `commonAnnotations`. |
+| `apiVersion` | no | Per-resource API version override. |
+| `spec` | no | Raw resource spec rendered as-is. |
+| `status` | no | Optional raw status block. Usually not managed through Helm in production. |
+
+Global controls:
+
+- `nameOverride`
+- `commonLabels`
+- `commonAnnotations`
+- `apiVersions.*`
+
+The value contract is validated by [values.schema.json](values.schema.json).
+
+## Helm Values
+
+This section is generated from [values.yaml](values.yaml) by `helm-docs`. Edit [values.yaml](values.yaml) comments or [docs/README.md.gotmpl](docs/README.md.gotmpl), then run `pre-commit run helm-docs --all-files` or `make docs` if you need to refresh it outside a commit.
+
+{{ template "chart.valuesTable" . }}
+
+## Included Values Files
+
+- [values.yaml](values.yaml): minimal defaults that render no resources.
+- [values.yaml.example](values.yaml.example): complete example covering every supported resource type.
+
+Use [values.yaml.example](values.yaml.example) as a starting point and remove the sections you do not need.
+
+## Testing
+
+The repository uses three test layers:
+
+- `tests/units/` for `helm-unittest` suites and backward compatibility checks
+- `tests/e2e/` for local kind-based Helm install checks against real Gateway API CRDs
+- `tests/smokes/` for render and schema smoke scenarios
+
+Representative local commands:
+
+```bash
+helm lint . -f values.yaml.example
+helm template nuc-native-gateway . -f values.yaml.example
+helm unittest -f 'tests/units/*_test.yaml' .
+sh tests/units/backward_compatibility_test.sh
+python3 tests/smokes/run/smoke.py --scenario example-render
+make test-e2e
+```
+
+Detailed test documentation is available in [docs/TESTS.MD](docs/TESTS.MD).
+
+Local setup instructions for the development and test toolchain are available in [docs/DEPENDENCY.md](docs/DEPENDENCY.md).
+
+The `e2e` layer is intentionally kept out of GitLab CI and is expected to be run locally through [Makefile](Makefile) or directly via `tests/e2e/test-e2e.sh`.
+
+## Notes
+
+- Keep the chart API versions aligned with the Gateway API CRDs installed in the cluster.
+- `ListenerSet` support is controller-dependent and may rely on experimental APIs.
+- Prefer managing `spec` through Helm and let the controller own `status`.
+
+## Repository Layout
+
+| Path | Purpose |
+|------|---------|
+| [Chart.yaml](Chart.yaml) | Chart metadata. |
+| [values.yaml](values.yaml) | Minimal default values and `helm-docs` source comments. |
+| [docs/README.md.gotmpl](docs/README.md.gotmpl) | Template used by `helm-docs` to build `README.md`. |
+| [.pre-commit-config.yaml](.pre-commit-config.yaml) | Local hooks, including automatic `helm-docs` generation on commit. |
+| [values.yaml.example](values.yaml.example) | Full example configuration. |
+| [values.schema.json](values.schema.json) | JSON schema for chart values. |
+| [templates/](templates) | One template per supported Gateway API kind plus shared helpers. |
+| [tests/units/](tests/units) | Compact Helm unit suites and backward compatibility checks. |
+| [tests/e2e/](tests/e2e) | kind-based end-to-end installation checks. |
+| [tests/smokes/](tests/smokes) | Smoke scenarios for render and schema validation. |
+| [docs/DEPENDENCY.md](docs/DEPENDENCY.md) | Local dependency installation guide for development and tests. |
+| [docs/TESTS.MD](docs/TESTS.MD) | Detailed testing documentation. |
