@@ -11,6 +11,10 @@ stages:
   - render
   - validate
 
+  - validate-tag
+  - package
+  - publish
+
 variables:
   CHART_DIR: "."
   RELEASE_NAME: "nuc-release"
