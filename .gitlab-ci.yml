@@ -1,3 +1,9 @@
+include:
+  - project: "apps/nuc-subcharts/gitlab-ci"
+    ref: "main"
+    file:
+      - "/publish-subchart.gitlab-ci.yml"
+
 stages:
   - lint
   - unit-tests
@@ -20,6 +26,11 @@ variables:
   HELM_EXAMPLE_VALUES: "tests/smokes/fixtures/example.values.yaml"
   NUC_COMMON_REPO: "https://gitlab-ci-token:${CI_JOB_TOKEN}@git.nixys.ru/apps/nuc-subcharts/nuc-common.git"
   NUC_COMMON_REF: "main"
+
+  CHART_PATH: "./"
+  HARBOR_REGISTRY: $REGISTRY_NAME
+  HARBOR_PROJECT: "public"
+
 
 default:
   image:
