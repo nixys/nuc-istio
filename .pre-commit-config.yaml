@@ -8,4 +8,3 @@ repos:
         language: script
         files: (README\.md\.gotmpl|(Chart|requirements|values)\.yaml)$
         pass_filenames: false
-
