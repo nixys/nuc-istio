@@ -1,36 +1,6 @@
-{{- $tplContext := deepCopy $ -}}
-{{- if $.Values.global }}
-{{- $_ := set $tplContext "Values" (mergeOverwrite (deepCopy $.Values.global) $.Values) -}}
+{{- range $name := keys ($.Values.gateways | default dict) | sortAlpha }}
+{{- $gateway := get $.Values.gateways $name -}}
+{{- if ne $name "__helm_docs_example__" }}
+{{ include "nuc-istio.renderGateway" (dict "root" $ "name" $name "item" $gateway) }}
 {{- end }}
-{{- range $host, $gateway := .Values.gateways }}
----
-apiVersion: {{ include "helpers.capabilities.istiogateway.apiVersion" $ }}
-kind: Gateway
-metadata:
-  name: {{ include "helpers.app.fullname" (dict "name" ($gateway.name | default $host) "context" $) }}
-  namespace: {{ $.Release.Namespace | quote }}
-  labels:
-    {{- include "helpers.app.labels" $ | nindent 4 }}
-    {{- with $gateway.labels }}{{- include "helpers.tplvalues.render" (dict "value" . "context" $tplContext) | nindent 4 }}{{- end }}
-  annotations:
-    {{- include "helpers.app.genericAnnotations" $ | indent 4 }}
-    {{- with $gateway.annotations }}{{- include "helpers.tplvalues.render" (dict "value" . "context" $tplContext) | nindent 4 }}{{- end }}
-spec:
-  selector:
-    {{- include "helpers.tplvalues.render" (dict "value" $gateway.selector "context" $tplContext) | nindent 4 }}
-  servers:
-  {{- range $gateway.servers }}
-  - hosts:
-    {{- range .hosts }}
-    - {{ include "helpers.tplvalues.render" (dict "value" . "context" $tplContext) }}
-    {{- end }}
-    port:
-      name: {{ .port.name }}
-      number: {{ .port.number }}
-      protocol: {{ .port.protocol }}
-    {{- with .tls }}
-    tls:
-    {{- toYaml . | nindent 6 }}
-    {{- end }} {{/* end with .tls */}}
-  {{- end }}
 {{- end -}}

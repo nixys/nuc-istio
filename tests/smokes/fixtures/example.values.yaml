@@ -1,0 +1,140 @@
+nameOverride: istio-platform
+
+generic:
+  labels:
+    platform: edge
+  annotations:
+    owner: platform-team
+
+global:
+  domain: example.org
+  apiVersions:
+    istioGateway: networking.istio.io/v1beta1
+    istioVirtualService: networking.istio.io/v1beta1
+    istioDestinationRule: networking.istio.io/v1beta1
+
+gateways:
+  public:
+    name: public-gateway
+    labels:
+      component: ingress
+    annotations:
+      scope: external
+    selector:
+      istio: ingressgateway
+    servers:
+      - port:
+          number: 80
+          name: http
+          protocol: HTTP
+        hosts:
+          - '{{ .Values.global.domain }}'
+          - 'api.{{ .Values.global.domain }}'
+      - port:
+          number: 443
+          name: https
+          protocol: HTTPS
+        hosts:
+          - 'api.{{ .Values.global.domain }}'
+        tls:
+          mode: SIMPLE
+          credentialName: public-gateway-tls
+
+virtualservices:
+  public:
+    name: '{{ .Release.Name }}-public'
+    labels:
+      component: routing
+    annotations:
+      scope: public
+    hosts:
+      - '{{ .Values.global.domain }}'
+      - 'api.{{ .Values.global.domain }}'
+    gateways:
+      - public-gateway
+      - mesh
+    http:
+      - name: api-route
+        match:
+          - uri:
+              prefix: /api
+        route:
+          - destination:
+              host: api.default.svc.cluster.local
+              port:
+                number: 8080
+            weight: 100
+        retries:
+          attempts: 3
+          perTryTimeout: 2s
+        timeout: 10s
+        rewrite:
+          uri: /
+        corsPolicy:
+          allowOrigins:
+            - exact: https://portal.example.org
+          allowMethods:
+            - GET
+            - POST
+      - name: tls-upgrade
+        route:
+          - destination:
+              host: web.default.svc.cluster.local
+              port:
+                number: 8443
+        fault:
+          abort:
+            percentage:
+              value: 0.1
+            httpStatus: 503
+    tls:
+      - match:
+          - port: 443
+            sniHosts:
+              - secure.example.org
+        route:
+          - destination:
+              host: secure.default.svc.cluster.local
+              port:
+                number: 9443
+    tcp:
+      - match:
+          - port: 3306
+        route:
+          - destination:
+              host: mysql.default.svc.cluster.local
+              port:
+                number: 3306
+    exportTo:
+      - '.'
+
+destinationrules:
+  api:
+    name: api-destination
+    labels:
+      component: backend
+    annotations:
+      scope: internal
+    host: api.default.svc.cluster.local
+    trafficPolicy:
+      loadBalancer:
+        simple: ROUND_ROBIN
+      connectionPool:
+        http:
+          http1MaxPendingRequests: 100
+    subsets:
+      - name: v1
+        labels:
+          version: v1
+        trafficPolicy:
+          loadBalancer:
+            simple: LEAST_CONN
+      - name: v2
+        labels:
+          version: v2
+    exportTo:
+      - '.'
+      - observability
+    workloadSelector:
+      matchLabels:
+        app: api

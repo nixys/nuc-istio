@@ -1,0 +1,127 @@
+suite: example resources
+templates:
+  - templates/gateway.yml
+  - templates/virtualservice.yml
+  - templates/destinationrule.yml
+release:
+  name: unit-test
+  namespace: unit-namespace
+
+tests:
+  - it: renders the expected document count per template
+    values:
+      - values/example.values.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/gateway.yml
+      - hasDocuments:
+          count: 1
+        template: templates/virtualservice.yml
+      - hasDocuments:
+          count: 1
+        template: templates/destinationrule.yml
+
+  - it: renders the expected example manifests
+    values:
+      - values/example.values.yaml
+    asserts:
+      - containsDocument:
+          kind: Gateway
+          apiVersion: networking.istio.io/v1beta1
+          name: istio-platform-public-gateway
+          namespace: unit-namespace
+          any: true
+        template: templates/gateway.yml
+      - containsDocument:
+          kind: VirtualService
+          apiVersion: networking.istio.io/v1beta1
+          name: unit-test-public
+          namespace: unit-namespace
+          any: true
+        template: templates/virtualservice.yml
+      - containsDocument:
+          kind: DestinationRule
+          apiVersion: networking.istio.io/v1beta1
+          name: istio-platform-api-destination
+          namespace: unit-namespace
+          any: true
+        template: templates/destinationrule.yml
+
+  - it: renders the Gateway example
+    values:
+      - values/example.values.yaml
+    template: templates/gateway.yml
+    documentSelector:
+      path: metadata.name
+      value: istio-platform-public-gateway
+    asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: metadata.namespace
+          value: unit-namespace
+      - equal:
+          path: spec.servers[0].hosts[0]
+          value: example.org
+      - equal:
+          path: spec.servers[1].tls.credentialName
+          value: public-gateway-tls
+
+  - it: renders the VirtualService example
+    values:
+      - values/example.values.yaml
+    template: templates/virtualservice.yml
+    documentSelector:
+      path: metadata.name
+      value: unit-test-public
+    asserts:
+      - isKind:
+          of: VirtualService
+      - equal:
+          path: spec.hosts[1]
+          value: api.example.org
+      - equal:
+          path: spec.gateways[1]
+          value: mesh
+      - equal:
+          path: spec.http[0].retries.attempts
+          value: 3
+      - equal:
+          path: spec.http[0].timeout
+          value: 10s
+      - equal:
+          path: spec.http[0].rewrite.uri
+          value: /
+      - equal:
+          path: spec.http[1].fault.abort.httpStatus
+          value: 503
+      - equal:
+          path: spec.tls[0].match[0].sniHosts[0]
+          value: secure.example.org
+      - equal:
+          path: spec.tcp[0].route[0].destination.host
+          value: mysql.default.svc.cluster.local
+
+  - it: renders the DestinationRule example
+    values:
+      - values/example.values.yaml
+    template: templates/destinationrule.yml
+    documentSelector:
+      path: metadata.name
+      value: istio-platform-api-destination
+    asserts:
+      - isKind:
+          of: DestinationRule
+      - equal:
+          path: spec.trafficPolicy.loadBalancer.simple
+          value: ROUND_ROBIN
+      - equal:
+          path: spec.subsets[0].trafficPolicy.loadBalancer.simple
+          value: LEAST_CONN
+      - equal:
+          path: spec.exportTo[1]
+          value: observability
+      - equal:
+          path: spec.workloadSelector.matchLabels.app
+          value: api
