@@ -1,53 +1,6 @@
-{{- range $host, $destinationrule := .Values.destinationrules }}
-{{- $labels := include "helpers.app.labels" $ | fromYaml | default dict -}}
-{{- with $destinationrule.labels }}
-{{- $labels = mergeOverwrite $labels (include "helpers.tplvalues.render" (dict "value" . "context" $) | fromYaml) -}}
+{{- range $name := keys ($.Values.destinationrules | default dict) | sortAlpha }}
+{{- $destinationrule := get $.Values.destinationrules $name -}}
+{{- if ne $name "__helm_docs_example__" }}
+{{ include "nuc-istio.renderDestinationRule" (dict "root" $ "name" $name "item" $destinationrule) }}
 {{- end }}
-{{- $annotations := include "helpers.app.genericAnnotations" $ | fromYaml | default dict -}}
-{{- with $destinationrule.annotations }}
-{{- $annotations = mergeOverwrite $annotations (include "helpers.tplvalues.render" (dict "value" . "context" $) | fromYaml) -}}
-{{- end }}
----
-apiVersion: {{ include "helpers.capabilities.istiodestinationrule.apiVersion" $ }}
-kind: DestinationRule
-metadata:
-  name: {{ include "helpers.app.fullname" (dict "name" ($destinationrule.name | default $host) "context" $) }}
-  namespace: {{ $.Release.Namespace | quote }}
-  labels:
-    {{- toYaml $labels | nindent 4 }}
-  annotations:
-    {{- toYaml $annotations | nindent 4 }}
-spec:
-  host: {{ $destinationrule.host | quote }}
-  {{- with $destinationrule.trafficPolicy }}
-  trafficPolicy:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-  {{- if $destinationrule.subsets }}
-  subsets:
-    {{- range $subset := $destinationrule.subsets }}
-    - name: {{ $subset.name }}
-      labels:
-        {{- range $key, $value := $subset.labels }}
-        {{ $key }}: {{ $value | quote }}
-        {{- end }}
-      {{- with $subset.trafficPolicy }}
-      trafficPolicy:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-    {{- end }}
-  {{- end }}
-  {{- if $destinationrule.exportTo }}
-  exportTo:
-    {{- range $exportTo := $destinationrule.exportTo }}
-    - {{ $exportTo | quote }}
-    {{- end }}
-  {{- end }}
-  {{- with $destinationrule.workloadSelector }}
-  workloadSelector:
-    matchLabels:
-      {{- range $key, $value := .matchLabels }}
-      {{ $key }}: {{ $value | quote }}
-      {{- end }}
-  {{- end }}
 {{- end }}

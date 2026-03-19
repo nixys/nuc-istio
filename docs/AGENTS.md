@@ -29,20 +29,13 @@ Current repository layout:
 └── docs/
 ```
 
-Do not document files that do not exist in this repository. In particular, this chart currently does not ship `values.yaml.example` or `values.schema.json`.
+Do not document files that do not exist in this repository.
 
 ## Dependency Model
 
-Shared helper templates come from the `nuc-common` Helm chart.
+The chart is self-contained. Helper templates live in `templates/_helpers.tpl`.
 
-For this standalone repository:
-
-- `Chart.yaml` declares `nuc-common` as a local `file://charts/nuc-common` dependency
-- GitLab CI clones `nuc-common` into `charts/nuc-common` with `CI_JOB_TOKEN`
-- local e2e can clone the same dependency if it is not already present
-- smoke tests stage a clean chart copy and inject `nuc-common` from the local workspace
-
-When changing helper usage, keep `Chart.yaml`, CI, smoke staging, and local e2e aligned in the same change.
+When changing helper behavior, update templates, docs, and tests together.
 
 ## Chart Contract
 
@@ -74,7 +67,6 @@ E2E is local-only by design because it needs:
 - kubectl
 - helm
 - git
-- outbound access to clone `nuc-common`
 - outbound access to the Istio Helm repository
 
 Do not document e2e as a CI job unless a real runner with those capabilities is wired in.
@@ -96,9 +88,6 @@ git diff --check
 bash -n tests/e2e/test-e2e.sh
 sh -n tests/units/backward_compatibility_test.sh
 python3 -m py_compile tests/smokes/helpers/argparser.py tests/smokes/run/smoke.py tests/smokes/scenarios/smoke.py tests/smokes/steps/*.py
-helm dependency build .
 helm unittest -f 'tests/units/*_test.yaml' .
 python3 tests/smokes/run/smoke.py
 ```
-
-If `charts/nuc-common` is absent locally, fetch it first or run the workflow that prepares it.

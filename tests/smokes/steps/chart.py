@@ -41,12 +41,6 @@ def stage_chart(source_dir: Path, requested_workdir: str | None) -> tuple[Path, 
         if source.exists():
             shutil.copytree(source, destination, dirs_exist_ok=True)
 
-    common_chart_dir = source_dir.parents[2] / "universal-chart" / "charts" / "nuc-common"
-    if common_chart_dir.exists():
-        destination = chart_dir / "charts" / "nuc-common"
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(common_chart_dir, destination, dirs_exist_ok=True)
-
     return workdir, chart_dir
 
 

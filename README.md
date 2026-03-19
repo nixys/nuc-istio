@@ -9,14 +9,12 @@ The chart does not install Istio itself. It only renders `Gateway`, `VirtualServ
 Render a representative configuration:
 
 ```bash
-helm dependency build .
 helm template nuc-istio . -f tests/smokes/fixtures/example.values.yaml
 ```
 
 Install the chart:
 
 ```bash
-helm dependency build .
 helm install nuc-istio . \
   --namespace istio-system \
   --create-namespace \
@@ -53,8 +51,8 @@ Per-resource controls:
 | Field | Required | Description |
 |-------|----------|-------------|
 | `name` | no | Resource name. `Gateway` and `DestinationRule` are passed through `helpers.app.fullname`; `VirtualService` names are rendered through `helpers.tplvalues.render`. |
-| `labels` | no | Labels merged on top of generic chart labels from `nuc-common`. |
-| `annotations` | no | Annotations merged on top of generic chart annotations from `nuc-common`. |
+| `labels` | no | Labels merged on top of the chart's built-in common labels. |
+| `annotations` | no | Annotations merged on top of `generic.annotations`. |
 | `selector` | Gateway only | Raw Istio gateway selector. |
 | `servers` | Gateway only | Raw gateway server list. |
 | `hosts` | VirtualService only | Rendered list of hosts. |
@@ -102,7 +100,6 @@ The repository uses three test layers:
 Representative local commands:
 
 ```bash
-helm dependency build .
 helm lint . -f tests/smokes/fixtures/example.values.yaml
 helm unittest -f 'tests/units/*_test.yaml' .
 sh tests/units/backward_compatibility_test.sh
@@ -119,15 +116,13 @@ The `e2e` layer is intentionally kept out of GitLab CI and is expected to be run
 ## Notes
 
 - Keep the chart API versions aligned with the Istio CRDs installed in the cluster.
-- This chart depends on helper templates from `nuc-common`.
 - The chart does not install the Istio control plane or any ingress gateway workload.
 
 ## Repository Layout
 
 | Path | Purpose |
 |------|---------|
-| [Chart.yaml](Chart.yaml) | Chart metadata and dependency declaration for `nuc-common`. |
-| [Chart.lock](Chart.lock) | Locked dependency metadata after `helm dependency build`. |
+| [Chart.yaml](Chart.yaml) | Chart metadata. |
 | [values.yaml](values.yaml) | Minimal default values and `helm-docs` source comments. |
 | [docs/README.md.gotmpl](docs/README.md.gotmpl) | Template used by `helm-docs` to build `README.md`. |
 | [.pre-commit-config.yaml](.pre-commit-config.yaml) | Local hooks, including automatic `helm-docs` generation on commit. |

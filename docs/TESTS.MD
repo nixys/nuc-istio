@@ -8,7 +8,7 @@ This repository uses three complementary test layers:
 
 GitLab CI runs linting, unit tests, backward-compatibility checks, manifest rendering, and `kubeconform`.
 
-E2E is intentionally local-only because it requires Docker, kind, git access to `nuc-common`, and outbound access to the Istio Helm repository.
+E2E is intentionally local-only because it requires Docker, kind, and outbound access to the Istio Helm repository.
 
 ## Unit Tests
 
@@ -47,14 +47,12 @@ tests/units/
 ### Running unit tests
 
 ```bash
-helm dependency build .
 helm unittest -f 'tests/units/*_test.yaml' .
 sh tests/units/backward_compatibility_test.sh
 ```
 
 Notes:
 
-- `nuc-common` must exist under `charts/nuc-common` before `helm unittest`
 - values file paths inside the suites are resolved relative to `tests/units/`
 - the compatibility script requires git tags to be available locally
 
@@ -108,7 +106,7 @@ Run a single scenario:
 python3 tests/smokes/run/smoke.py --scenario rendering-contract
 ```
 
-Smoke tests stage a temporary clean copy of the chart and inject the `nuc-common` dependency into that staged copy so that helper templates resolve consistently.
+Smoke tests stage a temporary clean copy of the chart so rendering runs against the same files shipped by the repository.
 
 ## E2E Tests
 
@@ -131,11 +129,10 @@ This layer validates that the chart can be installed into a real Kubernetes API 
 `tests/e2e/test-e2e.sh` performs the following steps:
 
 1. Creates a disposable kind cluster from `tests/e2e/kind.yaml`
-2. Ensures `charts/nuc-common` exists, cloning it from Git if needed
-3. Installs Istio base CRDs from the official Istio Helm repository
-4. Installs the chart with `helm upgrade --install`
-5. Verifies the resulting `Gateway`, `VirtualService`, and `DestinationRule`
-6. Deletes the kind cluster on exit
+2. Installs Istio base CRDs from the official Istio Helm repository
+3. Installs the chart with `helm upgrade --install`
+4. Verifies the resulting `Gateway`, `VirtualService`, and `DestinationRule`
+5. Deletes the kind cluster on exit
 
 The e2e fixture does not install an Istio control plane or ingress gateway deployment. The purpose here is API-server installability and Helm flow validation, not live traffic tests.
 
@@ -158,7 +155,6 @@ bash tests/e2e/test-e2e.sh --debug
 - `kubectl`
 - `helm`
 - `git`
-- outbound access to clone `nuc-common`
 - outbound access to `https://istio-release.storage.googleapis.com/charts`
 
 Optional environment overrides:
@@ -166,11 +162,8 @@ Optional environment overrides:
 - `CLUSTER_NAME`
 - `K8S_VERSION`
 - `ISTIO_HELM_REPO`
-- `NUC_COMMON_REPO`
-- `NUC_COMMON_REF`
 
 ### E2E notes
 
 - The runner installs only the Istio base chart because this repository renders Istio CRDs, not control plane deployments.
 - Resource existence checks are performed with `kubectl get` against the fixed namespace `nuc-istio-e2e`.
-- If `charts/nuc-common` already exists locally, the e2e script reuses it instead of cloning.

@@ -7,13 +7,10 @@ set -o pipefail
 ROOT_DIR="$(git rev-parse --show-toplevel)"
 SCRIPT_DIR="${ROOT_DIR}/tests/e2e"
 CLUSTER_CREATED=false
-DEPENDENCY_CLONED=false
 CLUSTER_NAME="${CLUSTER_NAME:-$(mktemp -u "nuc-istio-e2e-XXXXXXXXXX" | tr "[:upper:]" "[:lower:]")}"
 # kindest/node images are not published for every Kubernetes patch release.
 K8S_VERSION="${K8S_VERSION:-v1.35.0}"
 ISTIO_HELM_REPO="${ISTIO_HELM_REPO:-https://istio-release.storage.googleapis.com/charts}"
-NUC_COMMON_REPO="${NUC_COMMON_REPO:-https://git.nixys.ru/apps/nuc-subcharts/nuc-common.git}"
-NUC_COMMON_REF="${NUC_COMMON_REF:-main}"
 E2E_NAMESPACE="nuc-istio-e2e"
 RELEASE_NAME="nuc-istio-e2e"
 VALUES_FILE="tests/e2e/values/install.values.yaml"
@@ -36,8 +33,6 @@ show_help() {
   echo "  CLUSTER_NAME       Kind cluster name"
   echo "  K8S_VERSION        kindest/node tag"
   echo "  ISTIO_HELM_REPO    Istio Helm repository URL"
-  echo "  NUC_COMMON_REPO    Git repository for the nuc-common dependency"
-  echo "  NUC_COMMON_REF     Git ref used for nuc-common"
   echo ""
 }
 
@@ -68,11 +63,6 @@ cleanup() {
     fi
   fi
 
-  if [ "${DEPENDENCY_CLONED}" = true ]; then
-    log_info "Removing temporary dependency checkout charts/nuc-common"
-    rm -rf "${ROOT_DIR}/charts/nuc-common"
-  fi
-
   exit "${exit_code}"
 }
 
@@ -97,20 +87,6 @@ create_kind_cluster() {
     --wait=60s
 
   CLUSTER_CREATED=true
-  echo
-}
-
-prepare_dependency() {
-  if [ -d "${ROOT_DIR}/charts/nuc-common" ]; then
-    log_info "Using existing dependency checkout at charts/nuc-common"
-    echo
-    return
-  fi
-
-  log_info "Cloning nuc-common dependency from ${NUC_COMMON_REPO} (${NUC_COMMON_REF})"
-  mkdir -p "${ROOT_DIR}/charts"
-  git clone --depth 1 --branch "${NUC_COMMON_REF}" "${NUC_COMMON_REPO}" "${ROOT_DIR}/charts/nuc-common"
-  DEPENDENCY_CLONED=true
   echo
 }
 
@@ -155,10 +131,6 @@ install_chart() {
     helm_args+=("$@")
   fi
 
-  log_info "Building chart dependencies"
-  helm dependency build "${ROOT_DIR}"
-  echo
-
   log_info "Installing chart with Helm"
   helm "${helm_args[@]}"
   echo
@@ -190,7 +162,6 @@ main() {
   trap cleanup EXIT
 
   create_kind_cluster
-  prepare_dependency
   install_istio_base_crds
   ensure_namespace
   install_chart "$@"

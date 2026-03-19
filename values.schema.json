@@ -59,10 +59,6 @@
       "additionalProperties": {
         "$ref": "#/definitions/destinationRule"
       }
-    },
-    "nuc-common": {
-      "type": "object",
-      "additionalProperties": true
     }
   },
   "definitions": {
