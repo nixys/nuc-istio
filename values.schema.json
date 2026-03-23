@@ -3,6 +3,9 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "enabled": {
+      "type": "boolean"
+    },
     "nameOverride": {
       "type": "string"
     },

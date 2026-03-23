@@ -1,3 +1,5 @@
+enabled: true
+
 gateways: {}
   # nginx:
   #   name: nginx-gateway
