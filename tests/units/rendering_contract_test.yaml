@@ -67,6 +67,14 @@ tests:
           path: spec.servers[0].hosts[0]
           value: corp.example.org
 
+  - it: skips Gateway documents for null map entries
+    values:
+      - values/null_resources.values.yaml
+    template: templates/gateway.yml
+    asserts:
+      - hasDocuments:
+          count: 0
+
   - it: applies helper defaults and overrides for VirtualService
     values:
       - values/rendering_contract.values.yaml
@@ -105,6 +113,14 @@ tests:
           path: spec.exportTo[0]
           value: .
 
+  - it: skips VirtualService documents for null map entries
+    values:
+      - values/null_resources.values.yaml
+    template: templates/virtualservice.yml
+    asserts:
+      - hasDocuments:
+          count: 0
+
   - it: applies helper defaults and overrides for DestinationRule
     values:
       - values/rendering_contract.values.yaml
@@ -142,3 +158,11 @@ tests:
       - equal:
           path: spec.workloadSelector.matchLabels.app
           value: edge
+
+  - it: skips DestinationRule documents for null map entries
+    values:
+      - values/null_resources.values.yaml
+    template: templates/destinationrule.yml
+    asserts:
+      - hasDocuments:
+          count: 0

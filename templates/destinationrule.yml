@@ -1,6 +1,6 @@
 {{- range $name := keys ($.Values.destinationrules | default dict) | sortAlpha }}
 {{- $destinationrule := get $.Values.destinationrules $name -}}
-{{- if ne $name "__helm_docs_example__" }}
+{{- if and (ne $name "__helm_docs_example__") $destinationrule }}
 {{ include "nuc-istio.renderDestinationRule" (dict "root" $ "name" $name "item" $destinationrule) }}
 {{- end }}
 {{- end }}
