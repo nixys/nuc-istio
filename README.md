@@ -80,6 +80,7 @@ This section is generated from [values.yaml](values.yaml) by `helm-docs`. Edit [
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | destinationrules | object | `{}` |  |
+| enabled | bool | `true` |  |
 | gateways | object | `{}` |  |
 | virtualservices | object | `{}` |  |
 

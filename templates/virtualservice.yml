@@ -1,6 +1,6 @@
 {{- range $name := keys ($.Values.virtualservices | default dict) | sortAlpha }}
 {{- $virtualservice := get $.Values.virtualservices $name -}}
-{{- if ne $name "__helm_docs_example__" }}
+{{- if and (ne $name "__helm_docs_example__") $virtualservice }}
 {{ include "nuc-istio.renderVirtualService" (dict "root" $ "name" $name "item" $virtualservice) }}
 {{- end }}
 {{- end }}

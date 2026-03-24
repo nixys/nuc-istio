@@ -1,0 +1,8 @@
+gateways:
+  nullable-gateway: null
+
+virtualservices:
+  nullable-virtualservice: null
+
+destinationrules:
+  nullable-destinationrule: null

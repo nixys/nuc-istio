@@ -1,6 +1,6 @@
 {{- range $name := keys ($.Values.gateways | default dict) | sortAlpha }}
 {{- $gateway := get $.Values.gateways $name -}}
-{{- if ne $name "__helm_docs_example__" }}
+{{- if and (ne $name "__helm_docs_example__") $gateway }}
 {{ include "nuc-istio.renderGateway" (dict "root" $ "name" $name "item" $gateway) }}
 {{- end }}
 {{- end -}}
