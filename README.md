@@ -6,10 +6,12 @@ The chart does not install Istio itself. It only renders `Gateway`, `VirtualServ
 
 ## Quick Start
 
-Render a representative configuration:
+Add the Nixys chart repository:
 
 ```bash
-helm template nuc-istio . -f tests/smokes/fixtures/example.values.yaml
+helm repo add nixys https://registry.nixys.io/chartrepo/public
+# or
+helm repo add nixys https://registry.nixys.ru/chartrepo/public
 ```
 
 Install the chart:
