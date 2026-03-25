@@ -163,6 +163,14 @@
           "description": "Explicit name for the rendered Gateway resource.",
           "type": "string"
         },
+        "namespace": {
+          "description": "Namespace where the rendered Gateway should be created.",
+          "type": "string"
+        },
+        "apiVersion": {
+          "description": "Explicit API version override for this Gateway.",
+          "type": "string"
+        },
         "labels": {
           "description": "Labels applied specifically to this Gateway.",
           "$ref": "#/definitions/stringMap"
@@ -208,6 +216,11 @@
         "name": {
           "description": "Optional route name used by Istio telemetry and debugging tools.",
           "type": "string"
+        },
+        "redirect": {
+          "description": "HTTP redirect action forwarded directly to Istio.",
+          "type": "object",
+          "additionalProperties": true
         },
         "match": {
           "description": "HTTP match conditions forwarded directly to the VirtualService route.",
@@ -314,6 +327,14 @@
       "properties": {
         "name": {
           "description": "Explicit name for the rendered VirtualService resource.",
+          "type": "string"
+        },
+        "namespace": {
+          "description": "Namespace where the rendered VirtualService should be created.",
+          "type": "string"
+        },
+        "apiVersion": {
+          "description": "Explicit API version override for this VirtualService.",
           "type": "string"
         },
         "labels": {
@@ -432,6 +453,14 @@
       "properties": {
         "name": {
           "description": "Explicit name for the rendered DestinationRule resource.",
+          "type": "string"
+        },
+        "namespace": {
+          "description": "Namespace where the rendered DestinationRule should be created.",
+          "type": "string"
+        },
+        "apiVersion": {
+          "description": "Explicit API version override for this DestinationRule.",
           "type": "string"
         },
         "labels": {

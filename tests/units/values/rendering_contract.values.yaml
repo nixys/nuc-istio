@@ -19,6 +19,8 @@ global:
 gateways:
   edge:
     name: edge-gateway
+    namespace: edge-gateways
+    apiVersion: custom.networking.io/v1alpha2
     labels:
       component: gateway
       tier: edge
@@ -37,6 +39,8 @@ gateways:
 virtualservices:
   edge:
     name: '{{ .Release.Name }}-edge'
+    namespace: app-routing
+    apiVersion: custom.networking.io/v1alpha2
     labels:
       component: routing
     annotations:
@@ -47,17 +51,18 @@ virtualservices:
       - edge-gateway
     http:
       - name: root
-        route:
-          - destination:
-              host: edge.default.svc.cluster.local
-              port:
-                number: 80
+        redirect:
+          authority: edge.example.org
+          scheme: https
+          redirectCode: 308
     exportTo:
       - '.'
 
 destinationrules:
   edge:
     name: edge-destination
+    namespace: app-routing
+    apiVersion: custom.networking.io/v1alpha2
     labels:
       component: policy
     annotations:

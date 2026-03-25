@@ -45,10 +45,10 @@ tests:
           of: Gateway
       - equal:
           path: apiVersion
-          value: custom.istio.io/v1alpha1
+          value: custom.networking.io/v1alpha2
       - equal:
           path: metadata.namespace
-          value: unit-namespace
+          value: edge-gateways
       - equal:
           path: metadata.labels["app.kubernetes.io/name"]
           value: istio-platform
@@ -94,10 +94,10 @@ tests:
           of: VirtualService
       - equal:
           path: apiVersion
-          value: custom.istio.io/v1alpha1
+          value: custom.networking.io/v1alpha2
       - equal:
           path: metadata.namespace
-          value: unit-namespace
+          value: app-routing
       - equal:
           path: metadata.labels["app.kubernetes.io/name"]
           value: istio-platform
@@ -114,8 +114,11 @@ tests:
           path: spec.gateways[0]
           value: edge-gateway
       - equal:
-          path: spec.http[0].route[0].destination.host
-          value: edge.default.svc.cluster.local
+          path: spec.http[0].redirect.authority
+          value: edge.example.org
+      - equal:
+          path: spec.http[0].redirect.redirectCode
+          value: 308
       - equal:
           path: spec.exportTo[0]
           value: .
@@ -140,10 +143,10 @@ tests:
           of: DestinationRule
       - equal:
           path: apiVersion
-          value: custom.istio.io/v1alpha1
+          value: custom.networking.io/v1alpha2
       - equal:
           path: metadata.namespace
-          value: unit-namespace
+          value: app-routing
       - equal:
           path: metadata.labels["app.kubernetes.io/name"]
           value: istio-platform
