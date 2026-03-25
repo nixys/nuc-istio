@@ -1,0 +1,6 @@
+{{- range $name := keys ($.Values.authorizationpolicies | default dict) | sortAlpha }}
+{{- $authorizationpolicy := get $.Values.authorizationpolicies $name -}}
+{{- if and (ne $name "__helm_docs_example__") $authorizationpolicy }}
+{{ include "nuc-istio.renderAuthorizationPolicy" (dict "root" $ "name" $name "item" $authorizationpolicy) }}
+{{- end }}
+{{- end }}

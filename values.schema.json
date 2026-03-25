@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "description": "Schema for configuring Istio Gateway, VirtualService, and DestinationRule resources in the nuc-istio chart.",
+  "description": "Schema for configuring Istio Gateway, VirtualService, DestinationRule, and AuthorizationPolicy resources in the nuc-istio chart.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -52,6 +52,10 @@
             "istioDestinationRule": {
               "description": "API version for DestinationRule resources.",
               "type": "string"
+            },
+            "istioAuthorizationPolicy": {
+              "description": "API version for AuthorizationPolicy resources.",
+              "type": "string"
             }
           }
         }
@@ -76,6 +80,13 @@
       "type": "object",
       "additionalProperties": {
         "$ref": "#/definitions/nullableDestinationRule"
+      }
+    },
+    "authorizationpolicies": {
+      "description": "Map of Istio AuthorizationPolicy resources keyed by logical name.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/nullableAuthorizationPolicy"
       }
     }
   },
@@ -475,6 +486,65 @@
       "oneOf": [
         {
           "$ref": "#/definitions/destinationRule"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "authorizationPolicy": {
+      "description": "Istio AuthorizationPolicy specification rendered by the chart.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rules"
+      ],
+      "properties": {
+        "name": {
+          "description": "Explicit name for the rendered AuthorizationPolicy resource.",
+          "type": "string"
+        },
+        "namespace": {
+          "description": "Namespace where the rendered AuthorizationPolicy should be created.",
+          "type": "string"
+        },
+        "apiVersion": {
+          "description": "Explicit API version override for this AuthorizationPolicy.",
+          "type": "string"
+        },
+        "labels": {
+          "description": "Labels applied specifically to this AuthorizationPolicy.",
+          "$ref": "#/definitions/stringMap"
+        },
+        "annotations": {
+          "description": "Annotations applied specifically to this AuthorizationPolicy.",
+          "$ref": "#/definitions/stringMap"
+        },
+        "selector": {
+          "description": "Optional workload selector for the AuthorizationPolicy.",
+          "type": "object",
+          "additionalProperties": true
+        },
+        "action": {
+          "description": "Policy action, for example ALLOW or DENY.",
+          "type": "string"
+        },
+        "rules": {
+          "description": "Authorization policy rules forwarded directly to Istio.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    "nullableAuthorizationPolicy": {
+      "description": "AuthorizationPolicy configuration or null to disable a specific map entry.",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/authorizationPolicy"
         },
         {
           "type": "null"

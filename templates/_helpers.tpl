@@ -89,6 +89,13 @@ metadata:
 {{- coalesce (get $apiVersions "istioDestinationRule") (get $globalApiVersions "istioDestinationRule") "networking.istio.io/v1beta1" -}}
 {{- end -}}
 
+{{- define "nuc-istio.istioauthorizationpolicy.apiVersion" -}}
+{{- $apiVersions := get .Values "apiVersions" | default dict -}}
+{{- $global := get .Values "global" | default dict -}}
+{{- $globalApiVersions := get $global "apiVersions" | default dict -}}
+{{- coalesce (get $apiVersions "istioAuthorizationPolicy") (get $globalApiVersions "istioAuthorizationPolicy") "security.istio.io/v1beta1" -}}
+{{- end -}}
+
 {{- define "nuc-istio.renderGatewaySpec" -}}
 {{- $tplContext := .tplContext -}}
 selector:
@@ -187,6 +194,31 @@ spec:
 {{ include "nuc-istio.renderDestinationRuleSpec" (dict "item" $item "tplContext" $tplContext) | nindent 2 }}
 {{- end -}}
 
+{{- define "nuc-istio.renderAuthorizationPolicySpec" -}}
+{{- $tplContext := .tplContext -}}
+{{- $item := .item -}}
+{{- with $item.selector }}
+selector:
+{{ include "nuc-istio.tplvalues.render" (dict "value" . "context" $tplContext) | nindent 2 }}
+{{- end }}
+action: {{ default "ALLOW" $item.action }}
+rules:
+{{ include "nuc-istio.tplvalues.render" (dict "value" $item.rules "context" $tplContext) | nindent 2 }}
+{{- end -}}
+
+{{- define "nuc-istio.renderAuthorizationPolicy" -}}
+{{- $root := .root -}}
+{{- $name := .name -}}
+{{- $item := .item | default dict -}}
+{{- $tplContext := include "nuc-istio.tplContext" $root | fromYaml -}}
+---
+apiVersion: {{ default (include "nuc-istio.istioauthorizationpolicy.apiVersion" $root) $item.apiVersion }}
+kind: AuthorizationPolicy
+{{ include "nuc-istio.renderMetadata" (dict "root" $root "item" $item "name" (include "nuc-istio.tplvalues.render" (dict "value" ($item.name | default $name) "context" $tplContext))) }}
+spec:
+{{ include "nuc-istio.renderAuthorizationPolicySpec" (dict "item" $item "tplContext" $tplContext) | nindent 2 }}
+{{- end -}}
+
 {{/* Compatibility aliases for older templates/docs naming. */}}
 {{- define "helpers.tplvalues.render" -}}
 {{- include "nuc-istio.tplvalues.render" . -}}
@@ -215,4 +247,8 @@ spec:
 
 {{- define "helpers.capabilities.istiodestinationrule.apiVersion" -}}
 {{- include "nuc-istio.istiodestinationrule.apiVersion" . -}}
+{{- end -}}
+
+{{- define "helpers.capabilities.istioauthorizationpolicy.apiVersion" -}}
+{{- include "nuc-istio.istioauthorizationpolicy.apiVersion" . -}}
 {{- end -}}

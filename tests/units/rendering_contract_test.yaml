@@ -3,6 +3,7 @@ templates:
   - templates/gateway.yml
   - templates/virtualservice.yml
   - templates/destinationrule.yml
+  - templates/authorizationpolicy.yml
 release:
   name: unit-test
   namespace: unit-namespace
@@ -22,6 +23,12 @@ tests:
 
   - it: renders no DestinationRule documents by default
     template: templates/destinationrule.yml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders no AuthorizationPolicy documents by default
+    template: templates/authorizationpolicy.yml
     asserts:
       - hasDocuments:
           count: 0
@@ -163,6 +170,49 @@ tests:
     values:
       - values/null_resources.values.yaml
     template: templates/destinationrule.yml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: applies helper defaults and overrides for AuthorizationPolicy
+    values:
+      - values/rendering_contract.values.yaml
+    template: templates/authorizationpolicy.yml
+    documentSelector:
+      path: metadata.name
+      value: unit-test-edge-access
+    asserts:
+      - isKind:
+          of: AuthorizationPolicy
+      - equal:
+          path: apiVersion
+          value: custom.security.io/v1alpha1
+      - equal:
+          path: metadata.namespace
+          value: policy-namespace
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: istio-platform
+      - equal:
+          path: metadata.labels.component
+          value: security
+      - equal:
+          path: metadata.annotations.note
+          value: access
+      - equal:
+          path: spec.action
+          value: DENY
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: edge
+      - equal:
+          path: spec.rules[0].to[0].operation.methods[0]
+          value: POST
+
+  - it: skips AuthorizationPolicy documents for null map entries
+    values:
+      - values/null_resources.values.yaml
+    template: templates/authorizationpolicy.yml
     asserts:
       - hasDocuments:
           count: 0

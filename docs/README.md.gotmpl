@@ -2,7 +2,7 @@
 
 Helm chart for rendering Istio networking resources from declarative values.
 
-The chart does not install Istio itself. It only renders `Gateway`, `VirtualService`, and `DestinationRule` objects for clusters where the corresponding Istio CRDs are already present.
+The chart does not install Istio itself. It only renders `Gateway`, `VirtualService`, `DestinationRule`, and `AuthorizationPolicy` objects for clusters where the corresponding Istio CRDs are already present.
 
 ## Quick Start
 
@@ -37,6 +37,7 @@ The chart can render these Istio kinds:
 - `Gateway`
 - `VirtualService`
 - `DestinationRule`
+- `AuthorizationPolicy`
 
 Support for individual fields still depends on the Istio CRDs installed in the target cluster.
 
@@ -47,6 +48,7 @@ Each top-level map in [values.yaml](values.yaml) maps to one resource kind:
 - `gateways`
 - `virtualservices`
 - `destinationrules`
+- `authorizationpolicies`
 
 Per-resource controls:
 
@@ -65,6 +67,8 @@ Per-resource controls:
 | `subsets` | DestinationRule only | Optional subsets list. |
 | `exportTo` | DestinationRule only | Optional export scope. |
 | `workloadSelector` | DestinationRule only | Optional workload selector. |
+| `action` | AuthorizationPolicy only | Policy action such as `ALLOW` or `DENY`. |
+| `rules` | AuthorizationPolicy only | Raw Istio authorization rules rendered as-is. |
 
 Global controls:
 
@@ -74,6 +78,7 @@ Global controls:
 - `global.apiVersions.istioGateway`
 - `global.apiVersions.istioVirtualService`
 - `global.apiVersions.istioDestinationRule`
+- `global.apiVersions.istioAuthorizationPolicy`
 
 ## Helm Values
 
@@ -124,7 +129,7 @@ The `e2e` layer is intentionally kept out of GitLab CI and is expected to be run
 | [values.yaml](values.yaml) | Minimal default values and `helm-docs` source comments. |
 | [docs/README.md.gotmpl](docs/README.md.gotmpl) | Template used by `helm-docs` to build `README.md`. |
 | [.pre-commit-config.yaml](.pre-commit-config.yaml) | Local hooks, including automatic `helm-docs` generation on commit. |
-| [templates/](templates) | Istio resource templates for `Gateway`, `VirtualService`, and `DestinationRule`. |
+| [templates/](templates) | Istio resource templates for `Gateway`, `VirtualService`, `DestinationRule`, and `AuthorizationPolicy`. |
 | [tests/units/](tests/units) | Compact Helm unit suites and backward compatibility checks. |
 | [tests/e2e/](tests/e2e) | Local kind-based end-to-end installation checks. |
 | [tests/smokes/](tests/smokes) | Smoke scenarios for render validation. |

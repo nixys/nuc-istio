@@ -6,3 +6,6 @@ virtualservices:
 
 destinationrules:
   nullable-destinationrule: null
+
+authorizationpolicies:
+  nullable-authorizationpolicy: null

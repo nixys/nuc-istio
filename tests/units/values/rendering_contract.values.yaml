@@ -14,6 +14,7 @@ global:
     istioGateway: custom.istio.io/v1alpha1
     istioVirtualService: custom.istio.io/v1alpha1
     istioDestinationRule: custom.istio.io/v1alpha1
+    istioAuthorizationPolicy: custom.security.io/v1alpha1
 
 gateways:
   edge:
@@ -77,3 +78,21 @@ destinationrules:
     workloadSelector:
       matchLabels:
         app: edge
+
+authorizationpolicies:
+  edge-access:
+    name: '{{ .Release.Name }}-edge-access'
+    namespace: policy-namespace
+    labels:
+      component: security
+    annotations:
+      note: access
+    selector:
+      matchLabels:
+        app: edge
+    action: DENY
+    rules:
+      - to:
+          - operation:
+              methods:
+                - POST

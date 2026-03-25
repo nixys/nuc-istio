@@ -12,6 +12,7 @@ global:
     istioGateway: networking.istio.io/v1beta1
     istioVirtualService: networking.istio.io/v1beta1
     istioDestinationRule: networking.istio.io/v1beta1
+    istioAuthorizationPolicy: security.istio.io/v1beta1
 
 gateways:
   public:
@@ -138,3 +139,25 @@ destinationrules:
     workloadSelector:
       matchLabels:
         app: api
+
+authorizationpolicies:
+  vpn:
+    name: vpn-wl
+    namespace: istio-system
+    labels:
+      component: security
+    annotations:
+      scope: ingress
+    selector:
+      matchLabels:
+        istio: main-gateway
+    action: ALLOW
+    rules:
+      - from:
+          - source:
+              remoteIpBlocks:
+                - 212.27.246.18/32
+        to:
+          - operation:
+              hosts:
+                - alertmanager.example.com

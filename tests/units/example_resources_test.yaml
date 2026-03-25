@@ -3,6 +3,7 @@ templates:
   - templates/gateway.yml
   - templates/virtualservice.yml
   - templates/destinationrule.yml
+  - templates/authorizationpolicy.yml
 release:
   name: unit-test
   namespace: unit-namespace
@@ -21,6 +22,9 @@ tests:
       - hasDocuments:
           count: 1
         template: templates/destinationrule.yml
+      - hasDocuments:
+          count: 1
+        template: templates/authorizationpolicy.yml
 
   - it: renders the expected example manifests
     values:
@@ -47,6 +51,13 @@ tests:
           namespace: unit-namespace
           any: true
         template: templates/destinationrule.yml
+      - containsDocument:
+          kind: AuthorizationPolicy
+          apiVersion: security.istio.io/v1beta1
+          name: vpn-wl
+          namespace: istio-system
+          any: true
+        template: templates/authorizationpolicy.yml
 
   - it: renders the Gateway example
     values:
@@ -125,3 +136,29 @@ tests:
       - equal:
           path: spec.workloadSelector.matchLabels.app
           value: api
+
+  - it: renders the AuthorizationPolicy example
+    values:
+      - values/example.values.yaml
+    template: templates/authorizationpolicy.yml
+    documentSelector:
+      path: metadata.name
+      value: vpn-wl
+    asserts:
+      - isKind:
+          of: AuthorizationPolicy
+      - equal:
+          path: metadata.namespace
+          value: istio-system
+      - equal:
+          path: spec.action
+          value: ALLOW
+      - equal:
+          path: spec.selector.matchLabels.istio
+          value: main-gateway
+      - equal:
+          path: spec.rules[0].from[0].source.remoteIpBlocks[0]
+          value: 212.27.246.18/32
+      - equal:
+          path: spec.rules[0].to[0].operation.hosts[0]
+          value: alertmanager.example.com

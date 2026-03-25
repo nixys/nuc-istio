@@ -11,6 +11,7 @@ global:
     istioGateway: networking.istio.io/v1beta1
     istioVirtualService: networking.istio.io/v1beta1
     istioDestinationRule: networking.istio.io/v1beta1
+    istioAuthorizationPolicy: security.istio.io/v1beta1
 
 gateways:
   public:
@@ -54,3 +55,16 @@ destinationrules:
       - name: v1
         labels:
           version: v1
+
+authorizationpolicies:
+  ingress:
+    name: e2e-public-access
+    selector:
+      matchLabels:
+        app: e2e-backend
+    action: ALLOW
+    rules:
+      - to:
+          - operation:
+              methods:
+                - GET

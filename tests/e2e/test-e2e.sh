@@ -68,8 +68,8 @@ cleanup() {
 
 dump_cluster_state() {
   log_warn "Dumping Istio networking resources from ${CLUSTER_NAME}"
-  kubectl get crd gateways.networking.istio.io,virtualservices.networking.istio.io,destinationrules.networking.istio.io || true
-  kubectl get gateways.networking.istio.io,virtualservices.networking.istio.io,destinationrules.networking.istio.io -A || true
+  kubectl get crd gateways.networking.istio.io,virtualservices.networking.istio.io,destinationrules.networking.istio.io,authorizationpolicies.security.istio.io || true
+  kubectl get gateways.networking.istio.io,virtualservices.networking.istio.io,destinationrules.networking.istio.io,authorizationpolicies.security.istio.io -A || true
 }
 
 create_kind_cluster() {
@@ -102,7 +102,8 @@ install_istio_base_crds() {
   for crd in \
     gateways.networking.istio.io \
     virtualservices.networking.istio.io \
-    destinationrules.networking.istio.io; do
+    destinationrules.networking.istio.io \
+    authorizationpolicies.security.istio.io; do
     kubectl wait --for=condition=Established --timeout=120s "crd/${crd}"
   done
 
@@ -141,6 +142,7 @@ verify_release_resources() {
   kubectl -n "${E2E_NAMESPACE}" get gateway e2e-public-gateway
   kubectl -n "${E2E_NAMESPACE}" get virtualservice e2e-public-route
   kubectl -n "${E2E_NAMESPACE}" get destinationrule e2e-api-destination
+  kubectl -n "${E2E_NAMESPACE}" get authorizationpolicy e2e-public-access
   echo
 }
 

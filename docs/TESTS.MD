@@ -30,7 +30,7 @@ tests/units/
 
 `rendering_contract_test.yaml` verifies chart-owned behavior:
 
-- empty render by default for all three templates
+- empty render by default for all four templates
 - label and annotation merge behavior
 - namespace rendering
 - helper-driven naming for `Gateway` and `DestinationRule`
@@ -41,6 +41,7 @@ tests/units/
 - `Gateway`
 - `VirtualService`
 - `DestinationRule`
+- `AuthorizationPolicy`
 
 `backward_compatibility_test.sh` renders the current chart with `values.yaml` from previous stable git tags and checks that old values still pass `helm lint` and `helm template`.
 
@@ -84,7 +85,7 @@ The smoke suite currently covers:
    Verifies helper-driven naming, label and annotation merge behavior, and API version overrides.
 
 3. `example-render`
-   Renders representative Istio resources and checks `Gateway`, `VirtualService`, and `DestinationRule` output.
+   Renders representative Istio resources and checks `Gateway`, `VirtualService`, `DestinationRule`, and `AuthorizationPolicy` output.
 
 ### Running smoke tests
 
@@ -131,7 +132,7 @@ This layer validates that the chart can be installed into a real Kubernetes API 
 1. Creates a disposable kind cluster from `tests/e2e/kind.yaml`
 2. Installs Istio base CRDs from the official Istio Helm repository
 3. Installs the chart with `helm upgrade --install`
-4. Verifies the resulting `Gateway`, `VirtualService`, and `DestinationRule`
+4. Verifies the resulting `Gateway`, `VirtualService`, `DestinationRule`, and `AuthorizationPolicy`
 5. Deletes the kind cluster on exit
 
 The e2e fixture does not install an Istio control plane or ingress gateway deployment. The purpose here is API-server installability and Helm flow validation, not live traffic tests.

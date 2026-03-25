@@ -60,7 +60,7 @@ def check_rendering_contract(context: SmokeContext) -> None:
     )
 
     documents = render.load_documents(output_path)
-    render.assert_doc_count(documents, 3)
+    render.assert_doc_count(documents, 4)
 
     gateway = render.select_document(
         documents, kind="Gateway", name="istio-platform-edge-gateway"
@@ -107,6 +107,18 @@ def check_rendering_contract(context: SmokeContext) -> None:
     render.assert_path(destination_rule, "spec.subsets[0].labels.version", "stable")
     render.assert_path(destination_rule, "spec.workloadSelector.matchLabels.app", "edge")
 
+    authorization_policy = render.select_document(
+        documents, kind="AuthorizationPolicy", name=f"{context.release_name}-edge-access"
+    )
+    render.assert_path(authorization_policy, "apiVersion", "custom.security.io/v1alpha1")
+    render.assert_path(authorization_policy, "metadata.namespace", "policy-namespace")
+    render.assert_path(authorization_policy, "metadata.labels[app.kubernetes.io/name]", "istio-platform")
+    render.assert_path(authorization_policy, "metadata.labels.component", "security")
+    render.assert_path(authorization_policy, "metadata.annotations.note", "access")
+    render.assert_path(authorization_policy, "spec.action", "DENY")
+    render.assert_path(authorization_policy, "spec.selector.matchLabels.app", "edge")
+    render.assert_path(authorization_policy, "spec.rules[0].to[0].operation.methods[0]", "POST")
+
 
 def check_example_render(context: SmokeContext) -> None:
     helm.lint(
@@ -125,13 +137,14 @@ def check_example_render(context: SmokeContext) -> None:
     )
 
     documents = render.load_documents(output_path)
-    render.assert_doc_count(documents, 3)
+    render.assert_doc_count(documents, 4)
     render.assert_kinds(
         documents,
         {
             "Gateway",
             "VirtualService",
             "DestinationRule",
+            "AuthorizationPolicy",
         },
     )
 
@@ -166,6 +179,19 @@ def check_example_render(context: SmokeContext) -> None:
     render.assert_path(destination_rule, "spec.subsets[0].trafficPolicy.loadBalancer.simple", "LEAST_CONN")
     render.assert_path(destination_rule, "spec.exportTo[1]", "observability")
     render.assert_path(destination_rule, "spec.workloadSelector.matchLabels.app", "api")
+
+    authorization_policy = render.select_document(
+        documents, kind="AuthorizationPolicy", name="vpn-wl"
+    )
+    render.assert_path(authorization_policy, "metadata.namespace", "istio-system")
+    render.assert_path(authorization_policy, "metadata.labels[app.kubernetes.io/name]", "istio-platform")
+    render.assert_path(authorization_policy, "spec.action", "ALLOW")
+    render.assert_path(authorization_policy, "spec.selector.matchLabels.istio", "main-gateway")
+    render.assert_path(
+        authorization_policy,
+        "spec.rules[0].from[0].source.remoteIpBlocks[0]",
+        "212.27.246.18/32",
+    )
 
 
 SCENARIOS: list[tuple[str, Callable[[SmokeContext], None]]] = [
