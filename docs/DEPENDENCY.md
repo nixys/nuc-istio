@@ -1,6 +1,6 @@
 # Development Dependencies
 
-This document describes the local tools needed to develop, document, and test the `nuc-native-gateway` Helm chart.
+This document describes the local tools needed to develop, document, and test the `nuc-istio` Helm chart.
 
 The repository is designed around a small set of entry points:
 

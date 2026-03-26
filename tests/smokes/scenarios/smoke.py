@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from tests.smokes.steps import chart, helm, render, system
+from tests.smokes.steps import chart, helm, kubeconform, render, system
 
 
 @dataclass
@@ -28,6 +28,16 @@ class SmokeContext:
     def example_values(self) -> Path:
         return self.repo_root / "tests" / "smokes" / "fixtures" / "example.values.yaml"
 
+    @property
+    def invalid_list_contract_values(self) -> Path:
+        return (
+            self.repo_root
+            / "tests"
+            / "smokes"
+            / "fixtures"
+            / "invalid-list-contract.values.yaml"
+        )
+
 
 def check_default_empty(context: SmokeContext) -> None:
     helm.lint(context.chart_dir, workdir=context.workdir)
@@ -41,6 +51,25 @@ def check_default_empty(context: SmokeContext) -> None:
     )
     documents = render.load_documents(output_path)
     render.assert_doc_count(documents, 0)
+
+
+def check_schema_invalid_list_contract(context: SmokeContext) -> None:
+    result = helm.lint(
+        context.chart_dir,
+        values_file=context.invalid_list_contract_values,
+        workdir=context.workdir,
+        check=False,
+    )
+    if result.returncode == 0:
+        raise system.TestFailure(
+            "helm lint unexpectedly succeeded for invalid list-based values"
+        )
+
+    combined_output = f"{result.stdout}\n{result.stderr}"
+    if "gateways" not in combined_output or "object" not in combined_output:
+        raise system.TestFailure(
+            "helm lint failed for invalid values, but the error does not mention the object-based map contract"
+        )
 
 
 def check_rendering_contract(context: SmokeContext) -> None:
@@ -194,10 +223,31 @@ def check_example_render(context: SmokeContext) -> None:
     )
 
 
+def check_example_kubeconform(context: SmokeContext) -> None:
+    output_path = context.render_dir / "example-kubeconform.yaml"
+    helm.template(
+        context.chart_dir,
+        release_name=context.release_name,
+        namespace=context.namespace,
+        values_file=context.example_values,
+        output_path=output_path,
+        workdir=context.workdir,
+    )
+    kubeconform.validate(
+        manifest_path=output_path,
+        kube_version=context.kube_version,
+        kubeconform_bin=context.kubeconform_bin,
+        schema_location=context.schema_location,
+        skip_kinds=context.skip_kinds,
+    )
+
+
 SCENARIOS: list[tuple[str, Callable[[SmokeContext], None]]] = [
     ("default-empty", check_default_empty),
+    ("schema-invalid-list-contract", check_schema_invalid_list_contract),
     ("rendering-contract", check_rendering_contract),
     ("example-render", check_example_render),
+    ("example-kubeconform", check_example_kubeconform),
 ]
 
 

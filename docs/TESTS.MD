@@ -67,6 +67,7 @@ Current layout:
 tests/smokes/
 ├── fixtures/
 │   ├── example.values.yaml
+│   ├── invalid-list-contract.values.yaml
 │   └── rendering-contract.values.yaml
 ├── helpers/
 ├── run/
@@ -81,11 +82,24 @@ The smoke suite currently covers:
 1. `default-empty`
    Verifies that the chart renders no manifests with default values.
 
-2. `rendering-contract`
+2. `schema-invalid-list-contract`
+   Verifies that `values.schema.json` is active and rejects the old list-based contract for top-level resource collections.
+
+3. `rendering-contract`
    Verifies helper-driven naming, label and annotation merge behavior, and API version overrides.
 
-3. `example-render`
+4. `example-render`
    Renders representative Istio resources and checks `Gateway`, `VirtualService`, `DestinationRule`, and `AuthorizationPolicy` output.
+
+5. `example-kubeconform`
+   Renders representative Istio resources and validates the resulting manifests with `kubeconform`.
+
+### Prerequisites
+
+- `python3`
+- `helm`
+- `kubeconform` for the `example-kubeconform` scenario
+- `PyYAML`
 
 ### Running smoke tests
 
@@ -101,13 +115,26 @@ Run the suite:
 python3 tests/smokes/run/smoke.py
 ```
 
+Equivalent `Makefile` targets:
+
+```bash
+make test-smoke
+make test-smoke-fast
+```
+
 Run a single scenario:
 
 ```bash
 python3 tests/smokes/run/smoke.py --scenario rendering-contract
 ```
 
-Smoke tests stage a temporary clean copy of the chart so rendering runs against the same files shipped by the repository.
+Smoke tests stage a temporary clean copy of the chart so rendering runs against the same files shipped by the repository. The staged chart includes:
+
+- `Chart.yaml`
+- `values.yaml`
+- `values.example.yaml`
+- `values.schema.json`
+- `templates/`
 
 ## E2E Tests
 

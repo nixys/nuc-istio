@@ -10,6 +10,8 @@ from tests.smokes.steps import system
 FILES_TO_COPY = [
     "Chart.yaml",
     "values.yaml",
+    "values.example.yaml",
+    "values.schema.json",
 ]
 
 DIRS_TO_COPY = [
@@ -25,7 +27,7 @@ def stage_chart(source_dir: Path, requested_workdir: str | None) -> tuple[Path, 
             shutil.rmtree(workdir)
         workdir.mkdir(parents=True, exist_ok=True)
     else:
-        workdir = Path(tempfile.mkdtemp(prefix="nuc-native-gateway-smokes-"))
+        workdir = Path(tempfile.mkdtemp(prefix="nuc-istio-smokes-"))
 
     chart_dir = workdir / "chart"
     chart_dir.mkdir(parents=True, exist_ok=True)

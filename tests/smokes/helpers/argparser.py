@@ -11,8 +11,10 @@ DEFAULT_SCHEMA_LOCATION = (
 SCENARIO_CHOICES = [
     "all",
     "default-empty",
+    "schema-invalid-list-contract",
     "rendering-contract",
     "example-render",
+    "example-kubeconform",
 ]
 
 
@@ -44,27 +46,25 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--kube-version",
-        default=os.environ.get("KUBE_VERSION", "1.30.0"),
-        help="Unused compatibility option kept for smoke runner parity.",
+        default=os.environ.get("KUBE_VERSION", "1.35.2"),
+        help="Kubernetes version passed to kubeconform.",
     )
     parser.add_argument(
         "--kubeconform-bin",
         default=os.environ.get("KUBECONFORM_BIN", "kubeconform"),
-        help="Unused compatibility option kept for smoke runner parity.",
+        help="kubeconform binary path or command name.",
     )
     parser.add_argument(
         "--schema-location",
         default=os.environ.get(
             "KUBECONFORM_CRD_SCHEMA_LOCATION", DEFAULT_SCHEMA_LOCATION
         ),
-        help="Unused compatibility option kept for smoke runner parity.",
+        help="Additional kubeconform schema location for Istio CRDs.",
     )
     parser.add_argument(
         "--skip-kinds",
-        default=os.environ.get(
-            "KUBECONFORM_SKIP_KINDS", "ListenerSet,ReferenceGrant,TLSRoute"
-        ),
-        help="Unused compatibility option kept for smoke runner parity.",
+        default=os.environ.get("KUBECONFORM_SKIP_KINDS", ""),
+        help="Comma-separated kinds to skip in kubeconform.",
     )
     parser.add_argument(
         "--workdir",

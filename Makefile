@@ -33,9 +33,10 @@ test-smoke: ## Run all smoke scenarios; append SMOKE_ARGS='--scenario example-re
 	python3 tests/smokes/run/smoke.py $(SMOKE_ARGS)
 
 .PHONY: test-smoke-fast
-test-smoke-fast: ## Run the fast smoke scenarios
+test-smoke-fast: ## Run smoke scenarios except kubeconform-dependent validation
 	python3 tests/smokes/run/smoke.py \
 		--scenario default-empty \
+		--scenario schema-invalid-list-contract \
 		--scenario rendering-contract \
 		--scenario example-render \
 		$(SMOKE_ARGS)
