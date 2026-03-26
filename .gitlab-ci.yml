@@ -4,7 +4,10 @@ include:
     file:
       - "/variables-subchart.gitlab-ci.yml"
 
-
+  - project: "apps/nuc-subcharts/gitlab-ci"
+    ref: "v1.0.5"
+    file:
+      - "/test-subchart.gitlab-ci.yml"
 
   - project: "apps/nuc-subcharts/gitlab-ci"
     ref: "v1.0.5"
@@ -17,7 +20,8 @@ include:
       - "/sign-subchart.gitlab-ci.yml"
 
 stages:
-
+  - lint
+  - tests
 
   - validate-tag
   - package

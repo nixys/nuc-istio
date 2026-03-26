@@ -1,6 +1,23 @@
+---
 apiVersion: v2
 appVersion: 1.16.0
 description: A Helm chart for Kubernetes
 name: nuc-istio
 type: application
 version: 1.0.0-rc9
+keywords:
+  - kubernetes
+  - network
+  - universal-chart
+maintainers:
+  - name: Peter Rukin
+    email: p.rukin@nixys.ru
+  - name: Vyacheslav Vorobev
+    email: v.vorobyov@nixys.ru
+annotations:
+  artifacthub.io/category: integration-delivery
+  artifacthub.io/prerelease: "true"
+  artifacthub.io/changes: |
+    - Add Cosign Verification
+  artifacthub.io/recommendations: |
+    - url: https://nixys.io
