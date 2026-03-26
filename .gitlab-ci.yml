@@ -14,11 +14,16 @@ include:
     file:
       - "/publish-subchart.gitlab-ci.yml"
 
-stages:
-  - lint
-  - tests
+  - project: "apps/nuc-subcharts/gitlab-ci"
+    ref: "v1.0.5"
+    file:
+      - "/sign-subchart.gitlab-ci.yml"
 
+stages:
   - validate-tag
   - package
   - publish
 
+  - sign
+  - metadata
+  - verify
