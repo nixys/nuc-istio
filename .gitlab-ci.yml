@@ -16,11 +16,7 @@ include:
 
 stages:
   - lint
-  - unit-tests
-  - smoke-tests
-  - compatibility_tests
-  - render
-  - validate
+  - tests
 
   - validate-tag
   - package
