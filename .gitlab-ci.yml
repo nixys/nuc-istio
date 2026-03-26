@@ -1,16 +1,16 @@
 include:
   - project: "apps/nuc-subcharts/gitlab-ci"
-    ref: "v1.0.2"
+    ref: "v1.0.3"
     file:
       - "/variables-subchart.gitlab-ci.yml"
 
   - project: "apps/nuc-subcharts/gitlab-ci"
-    ref: "v1.0.2"
+    ref: "v1.0.3"
     file:
       - "/test-subchart.gitlab-ci.yml"
 
   - project: "apps/nuc-subcharts/gitlab-ci"
-    ref: "v1.0.2"
+    ref: "v1.0.3"
     file:
       - "/publish-subchart.gitlab-ci.yml"
 
