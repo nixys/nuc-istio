@@ -21,3 +21,7 @@ annotations:
     - Add Cosign Verification
   artifacthub.io/recommendations: |
     - url: https://nixys.io
+  artifacthub.io/signKey: |
+    fingerprint: 332FCD67C8B83C68B5AE67884856BB650E18E5427465417E1BC62ED1C417F3BE
+    url: https://registry.nixys.io/signkey/cosign.pub
+
