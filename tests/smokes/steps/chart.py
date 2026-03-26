@@ -10,7 +10,7 @@ from tests.smokes.steps import system
 FILES_TO_COPY = [
     "Chart.yaml",
     "values.yaml",
-    "values.example.yaml",
+    "values.yaml.example",
     "values.schema.json",
 ]
 

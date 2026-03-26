@@ -1,6 +1,6 @@
 # Example values for the nuc-istio chart.
 # Render with:
-#   helm template nuc-istio . -f values.example.yaml
+#   helm template nuc-istio . -f values.yaml.example
 
 nameOverride: istio-platform
 

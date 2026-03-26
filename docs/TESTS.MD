@@ -132,7 +132,7 @@ Smoke tests stage a temporary clean copy of the chart so rendering runs against 
 
 - `Chart.yaml`
 - `values.yaml`
-- `values.example.yaml`
+- `values.yaml.example`
 - `values.schema.json`
 - `templates/`
 
