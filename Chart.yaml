@@ -4,7 +4,7 @@ appVersion: 1.16.0
 description: A Helm chart for Kubernetes
 name: nuc-istio
 type: application
-version: 1.0.0-rc10
+version: 1.0.0-rc11
 keywords:
   - kubernetes
   - network
@@ -17,8 +17,17 @@ maintainers:
 annotations:
   artifacthub.io/category: integration-delivery
   artifacthub.io/prerelease: "true"
+  artifacthub.io/license: Apache License 2.0
+  artifacthub.io/links:  |
+    - name: Home
+      url: https://nixys.io
+    - name: Source
+      url: https://github.com/nixys/nuc-istio
+    - name: Core Helm Chart
+      url: https://github.com/nixys/nxs-universal-chart
   artifacthub.io/changes: |
     - Add Cosign Verification
+    - Add docs and links
   artifacthub.io/recommendations: |
     - url: https://nixys.io
     - url: https://github.com/nixys/nuc-istio
