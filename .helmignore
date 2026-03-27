@@ -21,3 +21,4 @@ values.example.yaml
 /values.example.yaml
 .gitignore
 .gitlab-ci.yml
+.artifacthub-repo.yml
