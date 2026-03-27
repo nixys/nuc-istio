@@ -1,6 +1,6 @@
 # NUC Istio
 
-[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/nuc-istio)](https://artifacthub.io/packages/search?repo=nuc-istio)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/nuc-vault-secret-operator)](https://artifacthub.io/packages/search?repo=nuc-vault-secret-operator)
 
 Helm chart for rendering Istio networking resources from declarative values.
 
