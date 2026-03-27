@@ -1,3 +1,5 @@
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/nuc-istio)](https://artifacthub.io/packages/search?repo=nuc-istio)
+
 # NUC Istio
 
 Helm chart for rendering Istio networking resources from declarative values.
