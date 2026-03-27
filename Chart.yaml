@@ -21,7 +21,10 @@ annotations:
     - Add Cosign Verification
   artifacthub.io/recommendations: |
     - url: https://nixys.io
+    - url: https://github.com/nixys/nuc-istio
+    - url: https://github.com/nixys/nxs-universal-chart
   artifacthub.io/signKey: |
     fingerprint: 332FCD67C8B83C68B5AE67884856BB650E18E5427465417E1BC62ED1C417F3BE
     url: https://registry.nixys.io/signkey/cosign.pub
-
+  icon: https://registry.nixys.ru/logo.png
+  home: https://github.com/nixys/nuc-istio
