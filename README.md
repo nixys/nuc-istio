@@ -1,5 +1,7 @@
 # NUC Istio
 
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/nuc-istio)](https://artifacthub.io/packages/search?repo=nuc-istio)
+
 Helm chart for rendering Istio networking resources from declarative values.
 
 The chart does not install Istio itself. It only renders `Gateway`, `VirtualService`, `DestinationRule`, and `AuthorizationPolicy` objects for clusters where the corresponding Istio CRDs are already present.
