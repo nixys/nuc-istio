@@ -4,10 +4,20 @@ appVersion: 1.16.0
 description: A Helm chart for Kubernetes
 name: nuc-istio
 type: application
-version: 1.0.0-rc11
+version: 1.0.0-rc12
+icon: https://registry.nixys.ru/logo.png
+home: https://github.com/nixys/nuc-istio
 keywords:
-  - kubernetes
-  - network
+  - istio
+  - service-mesh
+  - networking
+  - gateway
+  - virtualservice
+  - destinationrule
+  - authorizationpolicy
+  - traffic-management
+  - security
+  - helm
   - universal-chart
 maintainers:
   - name: Peter Rukin
@@ -35,5 +45,3 @@ annotations:
   artifacthub.io/signKey: |
     fingerprint: 332FCD67C8B83C68B5AE67884856BB650E18E5427465417E1BC62ED1C417F3BE
     url: https://registry.nixys.io/signkey/cosign.pub
-  icon: https://registry.nixys.ru/logo.png
-  home: https://github.com/nixys/nuc-istio
