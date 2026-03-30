@@ -1,10 +1,10 @@
 ---
 apiVersion: v2
 appVersion: 1.16.0
-description: A Helm chart for Kubernetes
+description: Helm chart for rendering Istio CRD resources
 name: nuc-istio
 type: application
-version: 1.0.0-rc14
+version: 1.0.0
 icon: https://registry.nixys.ru/logo.png
 home: https://github.com/nixys/nuc-istio
 keywords:
@@ -28,7 +28,7 @@ maintainers:
     email: v.vorobyov@nixys.ru
 annotations:
   artifacthub.io/category: integration-delivery
-  artifacthub.io/prerelease: "true"
+  artifacthub.io/prerelease: "false"
   artifacthub.io/license: Apache License 2.0
   artifacthub.io/links:  |
     - name: Home
