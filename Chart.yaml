@@ -4,7 +4,7 @@ appVersion: 1.16.0
 description: Helm chart for rendering Istio CRD resources
 name: nuc-istio
 type: application
-version: 1.0.0
+version: 1.0.2
 icon: https://registry.nixys.ru/logo.png
 home: https://github.com/nixys/nuc-istio
 keywords:
@@ -38,8 +38,7 @@ annotations:
     - name: Core Helm Chart
       url: https://github.com/nixys/nxs-universal-chart
   artifacthub.io/changes: |
-    - Add Cosign Verification
-    - Add docs and links
+    - Fix: Change OCI URL
   artifacthub.io/recommendations: |
     - url: https://nixys.io
     - url: https://github.com/nixys/nuc-istio

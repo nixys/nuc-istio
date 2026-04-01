@@ -8,20 +8,13 @@ The chart does not install Istio itself. It only renders `Gateway`, `VirtualServ
 
 ## Quick Start
 
-Add the Nixys chart repository:
-
-```bash
-helm repo add nixys https://registry.nixys.io/nuc
-```
-
 Install the chart:
 
 ```bash
-helm install nuc-istio nixys/nuc-istio \
+helm install nuc-istio oci://registry.nixys.ru/nuc/nuc-istio \
   --namespace istio \
   --create-namespace
 ```
-
 
 Install the local README generator hook:
 
