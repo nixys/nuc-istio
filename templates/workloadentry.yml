@@ -1,0 +1,8 @@
+{{ include "nuc-istio.renderResources" (dict
+  "root" $
+  "collection" ($.Values.workloadentries | default dict)
+  "resourceKey" "workloadentries"
+  "kind" "WorkloadEntry"
+  "defaultApiVersion" (include "nuc-istio.resolveApiVersion" (dict "root" $ "key" "workloadEntry" "legacyKey" "istioWorkloadEntry" "default" "networking.istio.io/v1"))
+  "namespaced" true
+) }}

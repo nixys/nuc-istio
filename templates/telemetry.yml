@@ -1,0 +1,8 @@
+{{ include "nuc-istio.renderResources" (dict
+  "root" $
+  "collection" ($.Values.telemetries | default dict)
+  "resourceKey" "telemetries"
+  "kind" "Telemetry"
+  "defaultApiVersion" (include "nuc-istio.resolveApiVersion" (dict "root" $ "key" "telemetry" "legacyKey" "istioTelemetry" "default" "telemetry.istio.io/v1"))
+  "namespaced" true
+) }}

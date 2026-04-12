@@ -7,8 +7,7 @@ set -o pipefail
 ROOT_DIR="$(git rev-parse --show-toplevel)"
 SCRIPT_DIR="${ROOT_DIR}/tests/e2e"
 CLUSTER_CREATED=false
-CLUSTER_NAME="${CLUSTER_NAME:-$(mktemp -u "nuc-istio-e2e-XXXXXXXXXX" | tr "[:upper:]" "[:lower:]")}"
-# kindest/node images are not published for every Kubernetes patch release.
+CLUSTER_NAME="${CLUSTER_NAME:-$(mktemp -u "nuc-istio-e2e-XXXXXXXXXX" | tr "[:upper:]" "[:lower:]")}" 
 K8S_VERSION="${K8S_VERSION:-v1.35.0}"
 ISTIO_HELM_REPO="${ISTIO_HELM_REPO:-https://istio-release.storage.googleapis.com/charts}"
 E2E_NAMESPACE="nuc-istio-e2e"
@@ -19,6 +18,40 @@ RED='\033[0;31m'
 YELLOW='\033[0;33m'
 RESET='\033[0m'
 
+CRDS=(
+  authorizationpolicies.security.istio.io
+  destinationrules.networking.istio.io
+  envoyfilters.networking.istio.io
+  gateways.networking.istio.io
+  peerauthentications.security.istio.io
+  proxyconfigs.networking.istio.io
+  requestauthentications.security.istio.io
+  serviceentries.networking.istio.io
+  sidecars.networking.istio.io
+  telemetries.telemetry.istio.io
+  virtualservices.networking.istio.io
+  wasmplugins.extensions.istio.io
+  workloadentries.networking.istio.io
+  workloadgroups.networking.istio.io
+)
+
+RESOURCES=(
+  "authorizationpolicy e2e-public-access"
+  "destinationrule e2e-api-destination"
+  "envoyfilter e2e-lua"
+  "gateway e2e-public-gateway"
+  "peerauthentication e2e-strict"
+  "proxyconfig e2e-proxy"
+  "requestauthentication e2e-jwt"
+  "serviceentry e2e-external"
+  "sidecar e2e-sidecar"
+  "telemetry e2e-telemetry"
+  "virtualservice e2e-public-route"
+  "wasmplugin e2e-wasm"
+  "workloadentry e2e-vm"
+  "workloadgroup e2e-group"
+)
+
 log_error() { echo -e "${RED}Error:${RESET} $1" >&2; }
 log_info() { echo -e "$1"; }
 log_warn() { echo -e "${YELLOW}Warning:${RESET} $1" >&2; }
@@ -28,12 +61,6 @@ show_help() {
   echo ""
   echo "Create a kind cluster, install Istio base CRDs, and run Helm install/upgrade against the root chart."
   echo "Unknown arguments are passed through to 'helm upgrade --install'."
-  echo ""
-  echo "Environment overrides:"
-  echo "  CLUSTER_NAME       Kind cluster name"
-  echo "  K8S_VERSION        kindest/node tag"
-  echo "  ISTIO_HELM_REPO    Istio Helm repository URL"
-  echo ""
 }
 
 verify_prerequisites() {
@@ -67,9 +94,9 @@ cleanup() {
 }
 
 dump_cluster_state() {
-  log_warn "Dumping Istio networking resources from ${CLUSTER_NAME}"
-  kubectl get crd gateways.networking.istio.io,virtualservices.networking.istio.io,destinationrules.networking.istio.io,authorizationpolicies.security.istio.io || true
-  kubectl get gateways.networking.istio.io,virtualservices.networking.istio.io,destinationrules.networking.istio.io,authorizationpolicies.security.istio.io -A || true
+  log_warn "Dumping Istio custom resources from ${CLUSTER_NAME}"
+  kubectl get crd "${CRDS[@]}" || true
+  kubectl get authorizationpolicies,destinationrules,envoyfilters,gateways,peerauthentications,proxyconfigs,requestauthentications,serviceentries,sidecars,telemetries,virtualservices,wasmplugins,workloadentries,workloadgroups -A || true
 }
 
 create_kind_cluster() {
@@ -99,11 +126,7 @@ install_istio_base_crds() {
     --create-namespace \
     --wait
 
-  for crd in \
-    gateways.networking.istio.io \
-    virtualservices.networking.istio.io \
-    destinationrules.networking.istio.io \
-    authorizationpolicies.security.istio.io; do
+  for crd in "${CRDS[@]}"; do
     kubectl wait --for=condition=Established --timeout=120s "crd/${crd}"
   done
 
@@ -139,10 +162,9 @@ install_chart() {
 
 verify_release_resources() {
   log_info "Verifying installed Istio resources"
-  kubectl -n "${E2E_NAMESPACE}" get gateway e2e-public-gateway
-  kubectl -n "${E2E_NAMESPACE}" get virtualservice e2e-public-route
-  kubectl -n "${E2E_NAMESPACE}" get destinationrule e2e-api-destination
-  kubectl -n "${E2E_NAMESPACE}" get authorizationpolicy e2e-public-access
+  for item in "${RESOURCES[@]}"; do
+    kubectl -n "${E2E_NAMESPACE}" get ${item}
+  done
   echo
 }
 

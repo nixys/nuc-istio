@@ -6,65 +6,140 @@ generic:
   annotations:
     test-suite: e2e
 
-global:
-  apiVersions:
-    istioGateway: networking.istio.io/v1beta1
-    istioVirtualService: networking.istio.io/v1beta1
-    istioDestinationRule: networking.istio.io/v1beta1
-    istioAuthorizationPolicy: security.istio.io/v1beta1
-
-gateways:
-  public:
-    name: public-gateway
-    selector:
-      istio: ingressgateway
-    servers:
-      - port:
-          number: 80
-          name: http
-          protocol: HTTP
-        hosts:
-          - e2e.example.internal
-
-virtualservices:
-  public:
-    name: e2e-public-route
-    hosts:
-      - e2e.example.internal
-    gateways:
-      - public-gateway
-    http:
-      - name: api
-        match:
-          - uri:
-              prefix: /
-        route:
-          - destination:
-              host: e2e-backend.default.svc.cluster.local
-              port:
-                number: 8080
+authorizationpolicies:
+  e2e-public-access:
+    spec:
+      selector:
+        matchLabels:
+          app: e2e-backend
+      action: ALLOW
+      rules:
+        - to:
+            - operation:
+                methods:
+                  - GET
 
 destinationrules:
-  api:
-    name: api-destination
-    host: e2e-backend.default.svc.cluster.local
-    trafficPolicy:
-      loadBalancer:
-        simple: ROUND_ROBIN
-    subsets:
-      - name: v1
-        labels:
-          version: v1
+  e2e-api-destination:
+    spec:
+      host: e2e-backend.default.svc.cluster.local
+      subsets:
+        - name: v1
+          labels:
+            version: v1
 
-authorizationpolicies:
-  ingress:
-    name: e2e-public-access
-    selector:
-      matchLabels:
+envoyfilters:
+  e2e-lua:
+    spec:
+      configPatches:
+        - applyTo: HTTP_FILTER
+          patch:
+            operation: INSERT_BEFORE
+            value:
+              name: envoy.filters.http.lua
+
+gateways:
+  e2e-public-gateway:
+    spec:
+      selector:
+        istio: ingressgateway
+      servers:
+        - port:
+            number: 80
+            name: http
+            protocol: HTTP
+          hosts:
+            - e2e.example.internal
+
+peerauthentications:
+  e2e-strict:
+    spec:
+      mtls:
+        mode: STRICT
+
+proxyconfigs:
+  e2e-proxy:
+    spec:
+      concurrency: 2
+
+requestauthentications:
+  e2e-jwt:
+    spec:
+      selector:
+        matchLabels:
+          app: e2e-backend
+      jwtRules:
+        - issuer: https://issuer.example.internal
+
+serviceentries:
+  e2e-external:
+    spec:
+      hosts:
+        - ext.example.internal
+      location: MESH_EXTERNAL
+      resolution: DNS
+      ports:
+        - number: 443
+          name: https
+          protocol: TLS
+
+sidecars:
+  e2e-sidecar:
+    spec:
+      workloadSelector:
+        labels:
+          app: e2e-backend
+      egress:
+        - hosts:
+            - './*'
+
+telemetries:
+  e2e-telemetry:
+    spec:
+      accessLogging:
+        - providers:
+            - name: envoy
+
+virtualservices:
+  e2e-public-route:
+    spec:
+      hosts:
+        - e2e.example.internal
+      gateways:
+        - e2e-public-gateway
+      http:
+        - name: api
+          match:
+            - uri:
+                prefix: /
+          route:
+            - destination:
+                host: e2e-backend.default.svc.cluster.local
+                port:
+                  number: 8080
+
+wasmplugins:
+  e2e-wasm:
+    spec:
+      selector:
+        matchLabels:
+          app: e2e-backend
+      url: oci://registry.example.org/wasm/e2e:1.0.0
+      phase: AUTHN
+
+workloadentries:
+  e2e-vm:
+    spec:
+      address: 10.30.0.10
+      labels:
         app: e2e-backend
-    action: ALLOW
-    rules:
-      - to:
-          - operation:
-              methods:
-                - GET
+      serviceAccount: e2e-backend
+
+workloadgroups:
+  e2e-group:
+    spec:
+      metadata:
+        labels:
+          app: e2e-backend
+      template:
+        serviceAccount: e2e-backend

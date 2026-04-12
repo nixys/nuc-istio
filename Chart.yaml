@@ -4,7 +4,7 @@ appVersion: 1.16.0
 description: Helm chart for rendering Istio CRD resources
 name: nuc-istio
 type: application
-version: 1.0.4
+version: 1.0.5
 icon: https://registry.nixys.ru/logo.png
 home: https://github.com/nixys/nuc-istio
 keywords:
@@ -39,7 +39,9 @@ annotations:
       url: https://github.com/nixys/nxs-universal-chart
   artifacthub.io/changes: |
     - kind: fixed
-      description: "Change OCI URL"
+      description: "Fix old template for name prefix"
+    - kind: added
+      description: "Add new templates for AuthorizationPolicy, DestinationRule, EnvoyFilter, Gateway, PeerAuthentication, ProxyConfig, RequestAuthentication, ServiceEntry, Sidecar, Telemetry, VirtualService, WasmPlugin, WorkloadEntry, WorkloadGroup"
   artifacthub.io/recommendations: |
     - url: https://nixys.io
     - url: https://github.com/nixys/nuc-istio

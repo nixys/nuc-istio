@@ -1,144 +1,320 @@
-# Example values for the nuc-istio chart.
-# Render with:
-#   helm template nuc-istio . -f values.yaml.example
-
 nameOverride: istio-platform
+
+commonLabels:
+  managed-by-layer: dependency
+
+commonAnnotations:
+  source-chart: nuc-istio
 
 generic:
   labels:
-    platform: edge
+    platform: mesh
   annotations:
     owner: platform-team
-
-global:
   domain: example.org
-  apiVersions:
-    istioGateway: networking.istio.io/v1beta1
-    istioVirtualService: networking.istio.io/v1beta1
-    istioDestinationRule: networking.istio.io/v1beta1
 
-gateways:
-  public:
-    name: public-gateway
-    labels:
-      component: ingress
-    annotations:
-      scope: external
-    selector:
-      istio: ingressgateway
-    servers:
-      - port:
-          number: 80
-          name: http
-          protocol: HTTP
-        hosts:
-          - '{{ .Values.global.domain }}'
-          - 'api.{{ .Values.global.domain }}'
-      - port:
-          number: 443
-          name: https
-          protocol: HTTPS
-        hosts:
-          - 'api.{{ .Values.global.domain }}'
-        tls:
-          mode: SIMPLE
-          credentialName: public-gateway-tls
+apiVersions:
+  gateway: networking.istio.io/v1
+  virtualService: networking.istio.io/v1
+  destinationRule: networking.istio.io/v1
+  authorizationPolicy: security.istio.io/v1
 
-virtualservices:
-  public:
-    name: '{{ .Release.Name }}-public'
+authorizationpolicies:
+  ingress-allow:
+    namespace: istio-system
     labels:
-      component: routing
-    annotations:
-      scope: public
-    hosts:
-      - '{{ .Values.global.domain }}'
-      - 'api.{{ .Values.global.domain }}'
-    gateways:
-      - public-gateway
-      - mesh
-    http:
-      - name: api-route
-        match:
-          - uri:
-              prefix: /api
-        route:
-          - destination:
-              host: api.default.svc.cluster.local
-              port:
-                number: 8080
-            weight: 100
-        retries:
-          attempts: 3
-          perTryTimeout: 2s
-        timeout: 10s
-        rewrite:
-          uri: /
-        corsPolicy:
-          allowOrigins:
-            - exact: https://portal.example.org
-          allowMethods:
-            - GET
-            - POST
-      - name: tls-upgrade
-        route:
-          - destination:
-              host: web.default.svc.cluster.local
-              port:
-                number: 8443
-        fault:
-          abort:
-            percentage:
-              value: 0.1
-            httpStatus: 503
-    tls:
-      - match:
-          - port: 443
-            sniHosts:
-              - secure.example.org
-        route:
-          - destination:
-              host: secure.default.svc.cluster.local
-              port:
-                number: 9443
-    tcp:
-      - match:
-          - port: 3306
-        route:
-          - destination:
-              host: mysql.default.svc.cluster.local
-              port:
-                number: 3306
-    exportTo:
-      - "."
+      component: security
+    spec:
+      selector:
+        matchLabels:
+          istio: ingressgateway
+      action: ALLOW
+      rules:
+        - from:
+            - source:
+                remoteIpBlocks:
+                  - 203.0.113.10/32
+  api-deny-post:
+    spec:
+      selector:
+        matchLabels:
+          app: api
+      action: DENY
+      rules:
+        - to:
+            - operation:
+                methods:
+                  - POST
 
 destinationrules:
-  api:
-    name: api-destination
+  api-backend:
     labels:
-      component: backend
-    annotations:
-      scope: internal
-    host: api.default.svc.cluster.local
-    trafficPolicy:
-      loadBalancer:
-        simple: ROUND_ROBIN
-      connectionPool:
-        http:
-          http1MaxPendingRequests: 100
-    subsets:
-      - name: v1
+      component: routing
+    spec:
+      host: api.default.svc.cluster.local
+      trafficPolicy:
+        loadBalancer:
+          simple: ROUND_ROBIN
+      subsets:
+        - name: stable
+          labels:
+            version: stable
+  payments-backend:
+    namespace: payments
+    spec:
+      host: payments.default.svc.cluster.local
+      exportTo:
+        - "."
+        - observability
+
+envoyfilters:
+  ingress-headers:
+    namespace: istio-system
+    spec:
+      workloadSelector:
         labels:
-          version: v1
-        trafficPolicy:
-          loadBalancer:
-            simple: LEAST_CONN
-      - name: v2
+          istio: ingressgateway
+      configPatches:
+        - applyTo: HTTP_FILTER
+          match:
+            context: GATEWAY
+            listener:
+              filterChain:
+                filter:
+                  name: envoy.filters.network.http_connection_manager
+          patch:
+            operation: INSERT_BEFORE
+            value:
+              name: envoy.filters.http.lua
+              typed_config:
+                '@type': type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+                inlineCode: |
+                  function envoy_on_request(handle)
+                    handle:headers():add("x-mesh", "enabled")
+                  end
+  local-ratelimit:
+    spec:
+      configPatches:
+        - applyTo: HTTP_FILTER
+          match:
+            context: SIDECAR_INBOUND
+          patch:
+            operation: INSERT_BEFORE
+            value:
+              name: envoy.filters.http.local_ratelimit
+
+gateways:
+  public-gateway:
+    labels:
+      component: ingress
+    spec:
+      selector:
+        istio: ingressgateway
+      servers:
+        - port:
+            number: 80
+            name: http
+            protocol: HTTP
+          hosts:
+            - '{{ .Values.generic.domain }}'
+            - 'api.{{ .Values.generic.domain }}'
+  private-gateway:
+    namespace: edge
+    spec:
+      selector:
+        istio: eastwestgateway
+      servers:
+        - port:
+            number: 15443
+            name: tls
+            protocol: TLS
+          hosts:
+            - '*.internal.{{ .Values.generic.domain }}'
+
+peerauthentications:
+  default-mtls:
+    namespace: istio-system
+    spec:
+      mtls:
+        mode: STRICT
+  permissive-legacy:
+    spec:
+      selector:
+        matchLabels:
+          app: legacy
+      mtls:
+        mode: PERMISSIVE
+
+proxyconfigs:
+  ingress-defaults:
+    namespace: istio-system
+    spec:
+      concurrency: 2
+      environmentVariables:
+        ISTIO_META_DNS_CAPTURE: 'true'
+  api-workers:
+    spec:
+      image:
+        imageType: distroless
+
+requestauthentications:
+  public-jwt:
+    spec:
+      selector:
+        matchLabels:
+          app: api
+      jwtRules:
+        - issuer: https://issuer.example.org
+          jwksUri: https://issuer.example.org/.well-known/jwks.json
+  internal-jwt:
+    namespace: istio-system
+    spec:
+      selector:
+        matchLabels:
+          istio: ingressgateway
+      jwtRules:
+        - issuer: https://internal.example.org
+          forwardOriginalToken: true
+
+serviceentries:
+  payments-external:
+    spec:
+      hosts:
+        - payments.example.com
+      location: MESH_EXTERNAL
+      resolution: DNS
+      ports:
+        - number: 443
+          name: https
+          protocol: TLS
+  s3-external:
+    spec:
+      hosts:
+        - s3.amazonaws.com
+      location: MESH_EXTERNAL
+      resolution: DNS
+      ports:
+        - number: 443
+          name: https
+          protocol: HTTPS
+
+sidecars:
+  api-sidecar:
+    spec:
+      workloadSelector:
         labels:
-          version: v2
-    exportTo:
-      - "."
-      - observability
-    workloadSelector:
-      matchLabels:
-        app: api
+          app: api
+      egress:
+        - hosts:
+            - './*'
+            - istio-system/*
+  jobs-sidecar:
+    namespace: jobs
+    spec:
+      workloadSelector:
+        labels:
+          app: jobs
+      outboundTrafficPolicy:
+        mode: REGISTRY_ONLY
+
+telemetries:
+  default-metrics:
+    namespace: istio-system
+    spec:
+      metrics:
+        - providers:
+            - name: prometheus
+  ingress-access-logs:
+    spec:
+      accessLogging:
+        - providers:
+            - name: envoy
+
+virtualservices:
+  public-api:
+    labels:
+      component: routing
+    spec:
+      hosts:
+        - '{{ .Values.generic.domain }}'
+        - 'api.{{ .Values.generic.domain }}'
+      gateways:
+        - public-gateway
+        - mesh
+      http:
+        - name: api
+          match:
+            - uri:
+                prefix: /api
+          route:
+            - destination:
+                host: api.default.svc.cluster.local
+                port:
+                  number: 8080
+              weight: 100
+  internal-api:
+    namespace: edge
+    spec:
+      hosts:
+        - 'internal.{{ .Values.generic.domain }}'
+      gateways:
+        - private-gateway
+      tcp:
+        - match:
+            - port: 3306
+          route:
+            - destination:
+                host: mysql.default.svc.cluster.local
+                port:
+                  number: 3306
+
+wasmplugins:
+  authn-filter:
+    namespace: istio-system
+    spec:
+      selector:
+        matchLabels:
+          istio: ingressgateway
+      url: oci://registry.example.org/wasm/authn:1.0.0
+      phase: AUTHN
+  metrics-filter:
+    spec:
+      selector:
+        matchLabels:
+          app: api
+      url: oci://registry.example.org/wasm/metrics:1.0.0
+      phase: STATS
+
+workloadentries:
+  vm-east:
+    spec:
+      address: 10.10.0.11
+      labels:
+        app: ratings
+        instance-id: east-1
+      serviceAccount: ratings-vm
+  vm-west:
+    spec:
+      address: 10.10.0.12
+      labels:
+        app: ratings
+        instance-id: west-1
+      serviceAccount: ratings-vm
+
+workloadgroups:
+  ratings-vm-group:
+    spec:
+      metadata:
+        labels:
+          app: ratings
+      template:
+        serviceAccount: ratings-vm
+        network: vm-network
+  jobs-vm-group:
+    namespace: jobs
+    spec:
+      metadata:
+        labels:
+          app: jobs
+      template:
+        serviceAccount: jobs-vm

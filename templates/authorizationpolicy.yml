@@ -1,6 +1,8 @@
-{{- range $name := keys ($.Values.authorizationpolicies | default dict) | sortAlpha }}
-{{- $authorizationpolicy := get $.Values.authorizationpolicies $name -}}
-{{- if and (ne $name "__helm_docs_example__") $authorizationpolicy }}
-{{ include "nuc-istio.renderAuthorizationPolicy" (dict "root" $ "name" $name "item" $authorizationpolicy) }}
-{{- end }}
-{{- end }}
+{{ include "nuc-istio.renderResources" (dict
+  "root" $
+  "collection" ($.Values.authorizationpolicies | default dict)
+  "resourceKey" "authorizationpolicies"
+  "kind" "AuthorizationPolicy"
+  "defaultApiVersion" (include "nuc-istio.resolveApiVersion" (dict "root" $ "key" "authorizationPolicy" "legacyKey" "istioAuthorizationPolicy" "default" "security.istio.io/v1"))
+  "namespaced" true
+) }}

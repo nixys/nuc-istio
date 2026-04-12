@@ -1,87 +1,192 @@
+# -- Enable nuc-istio chart rendering.
 enabled: true
 
-gateways: {}
-  # nginx:
-  #   name: nginx-gateway
-  #   selector:
-  #     istio: ingress
-  #   servers:
-  #     - port:
-  #         number: 80
-  #         name: http
-  #         protocol: HTTP
-  #       hosts:
-  #         - "nginx.example.com"
+# -- Compatibility values inherited from umbrella charts.
+global: {}
 
-virtualservices: {}
-  # nginx:
-  #   name: nginx-virtualservice
-  #   gateways:
-  #     - nginx-gateway
-  #   hosts:
-  #     - "nginx.example.com"
-  #   http:
-  #     - match:
-  #         - uri:
-  #             prefix: "/"
-  #       route:
-  #         - destination:
-  #             host: nginx-service.default.svc.cluster.local
-  #             port:
-  #               number: 80
+# -- Override the default chart label name if needed.
+nameOverride: ""
 
-destinationrules: {}
-  # nginx:
-  #   name: nginx-destinationrule
-  #   host: "nginx-service.default.svc.cluster.local"
-  #   trafficPolicy:
-  #     loadBalancer:
-  #       simple: ROUND_ROBIN
-  #     connectionPool:
-  #       http:
-  #         http1MaxPendingRequests: 500
-  #         maxRequestsPerConnection: 50
-  #     outlierDetection:
-  #       consecutiveGatewayErrors: 3
-  #       interval: 5s
-  #       baseEjectionTime: 15s
-  #   subsets:
-  #     - name: v1
-  #       labels:
-  #         app: nginx
-  #       trafficPolicy:
-  #         loadBalancer:
-  #           simple: LEAST_CONN
-  #         connectionPool:
-  #           tcp:
-  #             maxConnections: 200
-  #     - name: v2
-  #       labels:
-  #         version: v2
-  #       trafficPolicy:
-  #         loadBalancer:
-  #           simple: RANDOM
-  #         connectionPool:
-  #           http:
-  #             http2MaxRequests: 2000
-  #   exportTo:
-  #     - "."
-  #     - "another-namespace"
+# -- Extra labels applied to every rendered resource.
+commonLabels: {}
 
-authorizationpolicies: {}
-  # vpn:
-  #   name: vpn-wl
-  #   namespace: istio-system
-  #   selector:
-  #     matchLabels:
-  #       istio: main-gateway
-  #   action: ALLOW
-  #   rules:
-  #     - from:
-  #         - source:
-  #             remoteIpBlocks:
-  #               - 212.27.246.18/32
-  #       to:
-  #         - operation:
-  #             hosts:
-  #               - alertmanager.example.com
+# -- Extra annotations applied to every rendered resource.
+commonAnnotations: {}
+
+# -- Shared metadata and templating values compatible with nxs-universal-chart.
+generic:
+  labels: {}
+  annotations: {}
+
+# Override these defaults if your cluster uses different Istio API versions.
+apiVersions:
+  authorizationPolicy: security.istio.io/v1
+  destinationRule: networking.istio.io/v1
+  envoyFilter: networking.istio.io/v1alpha3
+  gateway: networking.istio.io/v1
+  peerAuthentication: security.istio.io/v1
+  proxyConfig: networking.istio.io/v1beta1
+  requestAuthentication: security.istio.io/v1
+  serviceEntry: networking.istio.io/v1
+  sidecar: networking.istio.io/v1
+  telemetry: telemetry.istio.io/v1
+  virtualService: networking.istio.io/v1
+  wasmPlugin: extensions.istio.io/v1alpha1
+  workloadEntry: networking.istio.io/v1
+  workloadGroup: networking.istio.io/v1
+
+# Each map entry supports:
+# - the top-level map key becomes metadata.name by default
+# - name: optional explicit metadata.name override
+# - namespace: optional, defaults to the release namespace
+# - labels: optional
+# - annotations: optional
+# - apiVersion: optional override for a single resource
+# - spec: arbitrary resource spec rendered as-is
+# - status: optional raw status block for fixtures and synthetic manifests
+# - set an entry to null in a higher-precedence values file to suppress a lower-precedence default resource
+# Legacy compatibility for the previous chart contract is kept for:
+# - gateways
+# - virtualservices
+# - destinationrules
+# - authorizationpolicies
+
+# -- AuthorizationPolicy resources keyed by resource name.
+authorizationpolicies:
+  __helm_docs_example__:
+    namespace: documentation-placeholder
+    labels: {}
+    annotations: {}
+    apiVersion: security.istio.io/v1
+    spec: {}
+    status: {}
+
+# -- DestinationRule resources keyed by resource name.
+destinationrules:
+  __helm_docs_example__:
+    namespace: documentation-placeholder
+    labels: {}
+    annotations: {}
+    apiVersion: networking.istio.io/v1
+    spec: {}
+    status: {}
+
+# -- EnvoyFilter resources keyed by resource name.
+envoyfilters:
+  __helm_docs_example__:
+    namespace: documentation-placeholder
+    labels: {}
+    annotations: {}
+    apiVersion: networking.istio.io/v1alpha3
+    spec: {}
+    status: {}
+
+# -- Gateway resources keyed by resource name.
+gateways:
+  __helm_docs_example__:
+    namespace: documentation-placeholder
+    labels: {}
+    annotations: {}
+    apiVersion: networking.istio.io/v1
+    spec: {}
+    status: {}
+
+# -- PeerAuthentication resources keyed by resource name.
+peerauthentications:
+  __helm_docs_example__:
+    namespace: documentation-placeholder
+    labels: {}
+    annotations: {}
+    apiVersion: security.istio.io/v1
+    spec: {}
+    status: {}
+
+# -- ProxyConfig resources keyed by resource name.
+proxyconfigs:
+  __helm_docs_example__:
+    namespace: documentation-placeholder
+    labels: {}
+    annotations: {}
+    apiVersion: networking.istio.io/v1beta1
+    spec: {}
+    status: {}
+
+# -- RequestAuthentication resources keyed by resource name.
+requestauthentications:
+  __helm_docs_example__:
+    namespace: documentation-placeholder
+    labels: {}
+    annotations: {}
+    apiVersion: security.istio.io/v1
+    spec: {}
+    status: {}
+
+# -- ServiceEntry resources keyed by resource name.
+serviceentries:
+  __helm_docs_example__:
+    namespace: documentation-placeholder
+    labels: {}
+    annotations: {}
+    apiVersion: networking.istio.io/v1
+    spec: {}
+    status: {}
+
+# -- Sidecar resources keyed by resource name.
+sidecars:
+  __helm_docs_example__:
+    namespace: documentation-placeholder
+    labels: {}
+    annotations: {}
+    apiVersion: networking.istio.io/v1
+    spec: {}
+    status: {}
+
+# -- Telemetry resources keyed by resource name.
+telemetries:
+  __helm_docs_example__:
+    namespace: documentation-placeholder
+    labels: {}
+    annotations: {}
+    apiVersion: telemetry.istio.io/v1
+    spec: {}
+    status: {}
+
+# -- VirtualService resources keyed by resource name.
+virtualservices:
+  __helm_docs_example__:
+    namespace: documentation-placeholder
+    labels: {}
+    annotations: {}
+    apiVersion: networking.istio.io/v1
+    spec: {}
+    status: {}
+
+# -- WasmPlugin resources keyed by resource name.
+wasmplugins:
+  __helm_docs_example__:
+    namespace: documentation-placeholder
+    labels: {}
+    annotations: {}
+    apiVersion: extensions.istio.io/v1alpha1
+    spec: {}
+    status: {}
+
+# -- WorkloadEntry resources keyed by resource name.
+workloadentries:
+  __helm_docs_example__:
+    namespace: documentation-placeholder
+    labels: {}
+    annotations: {}
+    apiVersion: networking.istio.io/v1
+    spec: {}
+    status: {}
+
+# -- WorkloadGroup resources keyed by resource name.
+workloadgroups:
+  __helm_docs_example__:
+    namespace: documentation-placeholder
+    labels: {}
+    annotations: {}
+    apiVersion: networking.istio.io/v1
+    spec: {}
+    status: {}
