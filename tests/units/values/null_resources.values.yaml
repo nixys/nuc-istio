@@ -1,11 +1,41 @@
-gateways:
-  nullable-gateway: null
-
-virtualservices:
-  nullable-virtualservice: null
+authorizationpolicies:
+  null-authz: null
 
 destinationrules:
-  nullable-destinationrule: null
+  null-dr: null
 
-authorizationpolicies:
-  nullable-authorizationpolicy: null
+envoyfilters:
+  null-envoy: null
+
+gateways:
+  null-gateway: null
+
+peerauthentications:
+  null-peer: null
+
+proxyconfigs:
+  null-proxy: null
+
+requestauthentications:
+  null-request: null
+
+serviceentries:
+  null-service-entry: null
+
+sidecars:
+  null-sidecar: null
+
+telemetries:
+  null-telemetry: null
+
+virtualservices:
+  null-vs: null
+
+wasmplugins:
+  null-wasm: null
+
+workloadentries:
+  null-workload-entry: null
+
+workloadgroups:
+  null-workload-group: null

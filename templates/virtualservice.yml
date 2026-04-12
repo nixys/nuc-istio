@@ -1,6 +1,8 @@
-{{- range $name := keys ($.Values.virtualservices | default dict) | sortAlpha }}
-{{- $virtualservice := get $.Values.virtualservices $name -}}
-{{- if and (ne $name "__helm_docs_example__") $virtualservice }}
-{{ include "nuc-istio.renderVirtualService" (dict "root" $ "name" $name "item" $virtualservice) }}
-{{- end }}
-{{- end }}
+{{ include "nuc-istio.renderResources" (dict
+  "root" $
+  "collection" ($.Values.virtualservices | default dict)
+  "resourceKey" "virtualservices"
+  "kind" "VirtualService"
+  "defaultApiVersion" (include "nuc-istio.resolveApiVersion" (dict "root" $ "key" "virtualService" "legacyKey" "istioVirtualService" "default" "networking.istio.io/v1"))
+  "namespaced" true
+) }}

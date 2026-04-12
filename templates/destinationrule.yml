@@ -1,6 +1,8 @@
-{{- range $name := keys ($.Values.destinationrules | default dict) | sortAlpha }}
-{{- $destinationrule := get $.Values.destinationrules $name -}}
-{{- if and (ne $name "__helm_docs_example__") $destinationrule }}
-{{ include "nuc-istio.renderDestinationRule" (dict "root" $ "name" $name "item" $destinationrule) }}
-{{- end }}
-{{- end }}
+{{ include "nuc-istio.renderResources" (dict
+  "root" $
+  "collection" ($.Values.destinationrules | default dict)
+  "resourceKey" "destinationrules"
+  "kind" "DestinationRule"
+  "defaultApiVersion" (include "nuc-istio.resolveApiVersion" (dict "root" $ "key" "destinationRule" "legacyKey" "istioDestinationRule" "default" "networking.istio.io/v1"))
+  "namespaced" true
+) }}

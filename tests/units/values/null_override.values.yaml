@@ -1,0 +1,5 @@
+gateways:
+  public-gateway: null
+
+telemetries:
+  default-metrics: null

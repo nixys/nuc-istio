@@ -1,98 +1,217 @@
 nameOverride: istio-platform
 
+commonLabels:
+  team: platform
+
+commonAnnotations:
+  owner: common-layer
+
 generic:
   labels:
-    platform: edge
-    component: shared
+    platform: mesh
+    tier: shared
   annotations:
-    owner: platform-team
     note: inherited
+  domain: corp.example.org
+
+apiVersions:
+  gateway: custom.networking.io/v1alpha2
+  serviceEntry: custom.networking.io/v1alpha2
+  telemetry: custom.telemetry.io/v1alpha1
 
 global:
-  domain: corp.example.org
   apiVersions:
-    istioGateway: custom.istio.io/v1alpha1
-    istioVirtualService: custom.istio.io/v1alpha1
-    istioDestinationRule: custom.istio.io/v1alpha1
+    istioVirtualService: custom.networking.io/v1alpha3
+    istioDestinationRule: custom.networking.io/v1alpha4
     istioAuthorizationPolicy: custom.security.io/v1alpha1
-
-gateways:
-  edge:
-    name: edge-gateway
-    labels:
-      component: gateway
-      tier: edge
-    annotations:
-      note: external
-    selector:
-      istio: ingressgateway
-    servers:
-      - port:
-          number: 80
-          name: http
-          protocol: HTTP
-        hosts:
-          - '{{ .Values.global.domain }}'
-
-virtualservices:
-  edge:
-    name: '{{ .Release.Name }}-edge'
-    labels:
-      component: routing
-    annotations:
-      note: public
-    hosts:
-      - '{{ .Values.global.domain }}'
-    gateways:
-      - edge-gateway
-    http:
-      - name: root
-        route:
-          - destination:
-              host: edge.default.svc.cluster.local
-              port:
-                number: 80
-    exportTo:
-      - '.'
-
-destinationrules:
-  edge:
-    name: edge-destination
-    labels:
-      component: policy
-    annotations:
-      note: destination
-    host: edge.default.svc.cluster.local
-    trafficPolicy:
-      loadBalancer:
-        simple: ROUND_ROBIN
-    subsets:
-      - name: stable
-        labels:
-          version: stable
-        trafficPolicy:
-          loadBalancer:
-            simple: LEAST_CONN
-    exportTo:
-      - '.'
-    workloadSelector:
-      matchLabels:
-        app: edge
+    istioRequestAuthentication: custom.security.io/v1alpha2
 
 authorizationpolicies:
   edge-access:
-    name: '{{ .Release.Name }}-edge-access'
     namespace: policy-namespace
     labels:
       component: security
     annotations:
       note: access
-    selector:
-      matchLabels:
-        app: edge
-    action: DENY
-    rules:
-      - to:
-          - operation:
-              methods:
-                - POST
+    spec:
+      selector:
+        matchLabels:
+          app: edge
+      action: DENY
+      rules:
+        - to:
+            - operation:
+                methods:
+                  - POST
+
+destinationrules:
+  edge-destination:
+    namespace: app-routing
+    labels:
+      component: policy
+    annotations:
+      note: destination
+    spec:
+      host: edge.default.svc.cluster.local
+      subsets:
+        - name: stable
+          labels:
+            version: stable
+
+envoyfilters:
+  gateway-lua:
+    namespace: istio-system
+    labels:
+      component: proxy
+    spec:
+      configPatches:
+        - applyTo: HTTP_FILTER
+          patch:
+            operation: INSERT_BEFORE
+            value:
+              name: envoy.filters.http.lua
+
+gateways:
+  edge-gateway:
+    namespace: edge-gateways
+    labels:
+      component: gateway
+      tier: edge
+    annotations:
+      note: external
+    spec:
+      selector:
+        istio: ingressgateway
+      servers:
+        - port:
+            number: 80
+            name: http
+            protocol: HTTP
+          hosts:
+            - '{{ .Values.generic.domain }}'
+
+peerauthentications:
+  edge-strict:
+    namespace: istio-system
+    labels:
+      component: security
+    spec:
+      mtls:
+        mode: STRICT
+
+proxyconfigs:
+  edge-proxy:
+    namespace: istio-system
+    labels:
+      component: proxy
+    spec:
+      concurrency: 4
+
+requestauthentications:
+  edge-jwt:
+    namespace: app-routing
+    labels:
+      component: security
+    spec:
+      selector:
+        matchLabels:
+          app: edge
+      jwtRules:
+        - issuer: https://issuer.corp.example.org
+
+serviceentries:
+  ext-payments:
+    namespace: app-routing
+    labels:
+      component: networking
+    annotations:
+      note: external-service
+    spec:
+      hosts:
+        - payments.corp.example.org
+      location: MESH_EXTERNAL
+      resolution: DNS
+      ports:
+        - number: 443
+          name: https
+          protocol: TLS
+
+sidecars:
+  edge-sidecar:
+    namespace: app-routing
+    labels:
+      component: networking
+    spec:
+      workloadSelector:
+        labels:
+          app: edge
+      egress:
+        - hosts:
+            - './*'
+
+telemetries:
+  edge-observability:
+    namespace: observability
+    labels:
+      component: telemetry
+    annotations:
+      note: observability
+    spec:
+      accessLogging:
+        - providers:
+            - name: envoy
+
+virtualservices:
+  edge:
+    name: '{{ .Release.Name }}-edge'
+    namespace: app-routing
+    labels:
+      component: routing
+    annotations:
+      note: public
+    spec:
+      hosts:
+        - '{{ .Values.generic.domain }}'
+      gateways:
+        - edge-gateway
+      http:
+        - name: root
+          redirect:
+            authority: edge.example.org
+            scheme: https
+            redirectCode: 308
+      exportTo:
+        - '.'
+
+wasmplugins:
+  edge-wasm:
+    namespace: istio-system
+    labels:
+      component: extension
+    spec:
+      selector:
+        matchLabels:
+          istio: ingressgateway
+      url: oci://registry.example.org/wasm/edge:1.0.0
+      phase: AUTHN
+
+workloadentries:
+  edge-vm:
+    namespace: app-routing
+    labels:
+      component: workload
+    spec:
+      address: 10.20.0.10
+      serviceAccount: edge-vm
+
+workloadgroups:
+  edge-group:
+    namespace: app-routing
+    labels:
+      component: workload
+    spec:
+      metadata:
+        labels:
+          app: edge
+      template:
+        serviceAccount: edge-vm

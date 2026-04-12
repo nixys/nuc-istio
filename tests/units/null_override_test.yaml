@@ -1,0 +1,56 @@
+suite: null override contract
+templates:
+  - templates/gateway.yml
+  - templates/telemetry.yml
+  - templates/virtualservice.yml
+release:
+  name: unit-test
+  namespace: unit-namespace
+
+tests:
+  - it: suppresses selected default resources while keeping sibling documents in the same template
+    values:
+      - values/example.values.yaml
+      - values/null_override.values.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/gateway.yml
+      - hasDocuments:
+          count: 1
+        template: templates/telemetry.yml
+      - containsDocument:
+          kind: Gateway
+          apiVersion: networking.istio.io/v1
+          name: private-gateway
+          namespace: edge
+          any: true
+        template: templates/gateway.yml
+      - containsDocument:
+          kind: Telemetry
+          apiVersion: telemetry.istio.io/v1
+          name: ingress-access-logs
+          namespace: unit-namespace
+          any: true
+        template: templates/telemetry.yml
+
+  - it: keeps unrelated resources untouched after null overrides
+    values:
+      - values/example.values.yaml
+      - values/null_override.values.yaml
+    template: templates/virtualservice.yml
+    asserts:
+      - hasDocuments:
+          count: 2
+      - containsDocument:
+          kind: VirtualService
+          apiVersion: networking.istio.io/v1
+          name: public-api
+          namespace: unit-namespace
+          any: true
+      - containsDocument:
+          kind: VirtualService
+          apiVersion: networking.istio.io/v1
+          name: internal-api
+          namespace: edge
+          any: true

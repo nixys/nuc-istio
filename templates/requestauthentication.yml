@@ -1,0 +1,8 @@
+{{ include "nuc-istio.renderResources" (dict
+  "root" $
+  "collection" ($.Values.requestauthentications | default dict)
+  "resourceKey" "requestauthentications"
+  "kind" "RequestAuthentication"
+  "defaultApiVersion" (include "nuc-istio.resolveApiVersion" (dict "root" $ "key" "requestAuthentication" "legacyKey" "istioRequestAuthentication" "default" "security.istio.io/v1"))
+  "namespaced" true
+) }}

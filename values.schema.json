@@ -1,584 +1,140 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "description": "Schema for configuring Istio Gateway, VirtualService, DestinationRule, and AuthorizationPolicy resources in the nuc-istio chart.",
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "nuc-istio values",
+  "description": "Schema for nuc-istio Helm chart values.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "enabled": {
-      "description": "Enables or disables rendering of all chart resources.",
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Enable rendering for this subchart."
+    },
+    "global": {
+      "type": "object",
+      "default": {},
+      "description": "Compatibility values inherited from umbrella charts.",
+      "additionalProperties": true
     },
     "nameOverride": {
-      "description": "Overrides the base name used for generated resource names.",
-      "type": "string"
+      "type": "string",
+      "description": "Override the chart name used in generated labels."
+    },
+    "commonLabels": {
+      "$ref": "#/definitions/stringMap",
+      "description": "Labels merged into every rendered resource."
+    },
+    "commonAnnotations": {
+      "$ref": "#/definitions/stringMap",
+      "description": "Annotations merged into every rendered resource."
     },
     "generic": {
-      "description": "Common metadata applied to all rendered resources unless overridden locally.",
       "type": "object",
-      "additionalProperties": false,
+      "description": "Shared generic values compatible with nxs-universal-chart.",
+      "additionalProperties": true,
       "properties": {
         "labels": {
-          "description": "Labels added to all chart resources.",
           "$ref": "#/definitions/stringMap"
         },
         "annotations": {
-          "description": "Annotations added to all chart resources.",
           "$ref": "#/definitions/stringMap"
         }
       }
     },
-    "global": {
-      "description": "Shared values consumed by this chart and compatible charts in the same release.",
+    "apiVersions": {
       "type": "object",
-      "additionalProperties": true,
+      "description": "Default API version overrides per supported Istio kind.",
+      "additionalProperties": false,
       "properties": {
-        "domain": {
-          "description": "Default domain suffix available for templating and host construction.",
-          "type": "string"
-        },
-        "apiVersions": {
-          "description": "Overrides for Istio API versions used by rendered resources.",
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "istioGateway": {
-              "description": "API version for Gateway resources.",
-              "type": "string"
-            },
-            "istioVirtualService": {
-              "description": "API version for VirtualService resources.",
-              "type": "string"
-            },
-            "istioDestinationRule": {
-              "description": "API version for DestinationRule resources.",
-              "type": "string"
-            },
-            "istioAuthorizationPolicy": {
-              "description": "API version for AuthorizationPolicy resources.",
-              "type": "string"
-            }
-          }
-        }
+        "authorizationPolicy": { "$ref": "#/definitions/nonEmptyString" },
+        "destinationRule": { "$ref": "#/definitions/nonEmptyString" },
+        "envoyFilter": { "$ref": "#/definitions/nonEmptyString" },
+        "gateway": { "$ref": "#/definitions/nonEmptyString" },
+        "peerAuthentication": { "$ref": "#/definitions/nonEmptyString" },
+        "proxyConfig": { "$ref": "#/definitions/nonEmptyString" },
+        "requestAuthentication": { "$ref": "#/definitions/nonEmptyString" },
+        "serviceEntry": { "$ref": "#/definitions/nonEmptyString" },
+        "sidecar": { "$ref": "#/definitions/nonEmptyString" },
+        "telemetry": { "$ref": "#/definitions/nonEmptyString" },
+        "virtualService": { "$ref": "#/definitions/nonEmptyString" },
+        "wasmPlugin": { "$ref": "#/definitions/nonEmptyString" },
+        "workloadEntry": { "$ref": "#/definitions/nonEmptyString" },
+        "workloadGroup": { "$ref": "#/definitions/nonEmptyString" }
       }
     },
-    "gateways": {
-      "description": "Map of Istio Gateway resources keyed by logical name.",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/nullableGateway"
-      }
-    },
-    "virtualservices": {
-      "description": "Map of Istio VirtualService resources keyed by logical name.",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/nullableVirtualService"
-      }
-    },
-    "destinationrules": {
-      "description": "Map of Istio DestinationRule resources keyed by logical name.",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/nullableDestinationRule"
-      }
-    },
-    "authorizationpolicies": {
-      "description": "Map of Istio AuthorizationPolicy resources keyed by logical name.",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/nullableAuthorizationPolicy"
-      }
-    }
+    "authorizationpolicies": { "$ref": "#/definitions/resourceMap" },
+    "destinationrules": { "$ref": "#/definitions/resourceMap" },
+    "envoyfilters": { "$ref": "#/definitions/resourceMap" },
+    "gateways": { "$ref": "#/definitions/resourceMap" },
+    "peerauthentications": { "$ref": "#/definitions/resourceMap" },
+    "proxyconfigs": { "$ref": "#/definitions/resourceMap" },
+    "requestauthentications": { "$ref": "#/definitions/resourceMap" },
+    "serviceentries": { "$ref": "#/definitions/resourceMap" },
+    "sidecars": { "$ref": "#/definitions/resourceMap" },
+    "telemetries": { "$ref": "#/definitions/resourceMap" },
+    "virtualservices": { "$ref": "#/definitions/resourceMap" },
+    "wasmplugins": { "$ref": "#/definitions/resourceMap" },
+    "workloadentries": { "$ref": "#/definitions/resourceMap" },
+    "workloadgroups": { "$ref": "#/definitions/resourceMap" }
   },
   "definitions": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
     "stringMap": {
-      "description": "Map of string keys to string values, typically used for labels or annotations.",
       "type": "object",
+      "default": {},
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1
+      },
       "additionalProperties": {
         "type": "string"
       }
     },
-    "port": {
-      "description": "Network port configuration used by an Istio Gateway server.",
+    "freeFormObject": {
       "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "number",
-        "name",
-        "protocol"
-      ],
-      "properties": {
-        "number": {
-          "description": "Port number exposed by the server.",
-          "type": "integer"
-        },
-        "name": {
-          "description": "Unique port name within the Gateway server list.",
-          "type": "string"
-        },
-        "protocol": {
-          "description": "Protocol handled on this port, for example HTTP or HTTPS.",
-          "type": "string"
-        }
-      }
+      "additionalProperties": true
     },
-    "gatewayServer": {
-      "description": "Single server entry in an Istio Gateway.",
+    "resourceItem": {
       "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "port",
-        "hosts"
-      ],
-      "properties": {
-        "port": {
-          "description": "Port definition for this Gateway server.",
-          "$ref": "#/definitions/port"
-        },
-        "hosts": {
-          "description": "Hosts served by this Gateway server.",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string"
-          }
-        },
-        "tls": {
-          "description": "Raw TLS settings forwarded to the Gateway server specification.",
-          "type": "object",
-          "additionalProperties": true
-        }
-      }
-    },
-    "gateway": {
-      "description": "Istio Gateway specification rendered by the chart.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "selector",
-        "servers"
-      ],
+      "additionalProperties": true,
       "properties": {
         "name": {
-          "description": "Explicit name for the rendered Gateway resource.",
-          "type": "string"
+          "$ref": "#/definitions/nonEmptyString"
         },
         "namespace": {
-          "description": "Namespace where the rendered Gateway should be created.",
-          "type": "string"
-        },
-        "apiVersion": {
-          "description": "Explicit API version override for this Gateway.",
-          "type": "string"
+          "$ref": "#/definitions/nonEmptyString"
         },
         "labels": {
-          "description": "Labels applied specifically to this Gateway.",
           "$ref": "#/definitions/stringMap"
         },
         "annotations": {
-          "description": "Annotations applied specifically to this Gateway.",
           "$ref": "#/definitions/stringMap"
-        },
-        "selector": {
-          "description": "Label selector identifying the Istio proxy workload that should serve this Gateway.",
-          "type": "object",
-          "minProperties": 1,
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "servers": {
-          "description": "List of Gateway servers exposed by this resource.",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/gatewayServer"
-          }
-        }
-      }
-    },
-    "nullableGateway": {
-      "description": "Gateway configuration or null to disable a specific map entry.",
-      "oneOf": [
-        {
-          "$ref": "#/definitions/gateway"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "virtualServiceHttpRoute": {
-      "description": "HTTP route entry inside an Istio VirtualService.",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "description": "Optional route name used by Istio telemetry and debugging tools.",
-          "type": "string"
-        },
-        "redirect": {
-          "description": "HTTP redirect action forwarded directly to Istio.",
-          "type": "object",
-          "additionalProperties": true
-        },
-        "match": {
-          "description": "HTTP match conditions forwarded directly to the VirtualService route.",
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": true
-          }
-        },
-        "route": {
-          "description": "HTTP route destinations and weights forwarded directly to Istio.",
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": true
-          }
-        },
-        "retries": {
-          "description": "Retry policy applied to this HTTP route.",
-          "type": "object",
-          "additionalProperties": true
-        },
-        "fault": {
-          "description": "Fault injection settings applied to this HTTP route.",
-          "type": "object",
-          "additionalProperties": true
-        },
-        "timeout": {
-          "description": "Request timeout for this HTTP route.",
-          "type": "string"
-        },
-        "rewrite": {
-          "description": "Rewrite rules applied before forwarding matched requests.",
-          "type": "object",
-          "additionalProperties": true
-        },
-        "corsPolicy": {
-          "description": "CORS policy applied to this HTTP route.",
-          "type": "object",
-          "additionalProperties": true
-        }
-      }
-    },
-    "virtualServiceTlsRoute": {
-      "description": "TLS route entry inside an Istio VirtualService.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "route"
-      ],
-      "properties": {
-        "match": {
-          "description": "TLS match conditions forwarded directly to Istio.",
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": true
-          }
-        },
-        "route": {
-          "description": "TLS route destinations forwarded directly to Istio.",
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": true
-          }
-        }
-      }
-    },
-    "virtualServiceTcpRoute": {
-      "description": "TCP route entry inside an Istio VirtualService.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "route"
-      ],
-      "properties": {
-        "match": {
-          "description": "TCP match conditions forwarded directly to Istio.",
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": true
-          }
-        },
-        "route": {
-          "description": "TCP route destinations forwarded directly to Istio.",
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": true
-          }
-        }
-      }
-    },
-    "virtualService": {
-      "description": "Istio VirtualService specification rendered by the chart.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "hosts",
-        "gateways"
-      ],
-      "properties": {
-        "name": {
-          "description": "Explicit name for the rendered VirtualService resource.",
-          "type": "string"
-        },
-        "namespace": {
-          "description": "Namespace where the rendered VirtualService should be created.",
-          "type": "string"
         },
         "apiVersion": {
-          "description": "Explicit API version override for this VirtualService.",
-          "type": "string"
+          "$ref": "#/definitions/nonEmptyString"
         },
-        "labels": {
-          "description": "Labels applied specifically to this VirtualService.",
-          "$ref": "#/definitions/stringMap"
+        "spec": {
+          "$ref": "#/definitions/freeFormObject"
         },
-        "annotations": {
-          "description": "Annotations applied specifically to this VirtualService.",
-          "$ref": "#/definitions/stringMap"
-        },
-        "hosts": {
-          "description": "Hosts matched by this VirtualService.",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string"
-          }
-        },
-        "gateways": {
-          "description": "Gateway names bound to this VirtualService.",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string"
-          }
-        },
-        "http": {
-          "description": "HTTP routing rules for this VirtualService.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/virtualServiceHttpRoute"
-          }
-        },
-        "tls": {
-          "description": "TLS routing rules for this VirtualService.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/virtualServiceTlsRoute"
-          }
-        },
-        "tcp": {
-          "description": "TCP routing rules for this VirtualService.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/virtualServiceTcpRoute"
-          }
-        },
-        "exportTo": {
-          "description": "Namespaces to which this VirtualService is exported.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "status": {
+          "$ref": "#/definitions/freeFormObject"
         }
+      }
+    },
+    "resourceMap": {
+      "type": "object",
+      "default": {},
+      "propertyNames": {
+        "$ref": "#/definitions/nonEmptyString"
       },
-      "anyOf": [
-        {
-          "required": [
-            "http"
-          ]
-        },
-        {
-          "required": [
-            "tls"
-          ]
-        },
-        {
-          "required": [
-            "tcp"
-          ]
-        }
-      ]
-    },
-    "nullableVirtualService": {
-      "description": "VirtualService configuration or null to disable a specific map entry.",
-      "oneOf": [
-        {
-          "$ref": "#/definitions/virtualService"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "destinationRuleSubset": {
-      "description": "Subset entry within an Istio DestinationRule.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "labels"
-      ],
-      "properties": {
-        "name": {
-          "description": "Subset name referenced by routing rules.",
-          "type": "string"
-        },
-        "labels": {
-          "description": "Workload labels selecting endpoints that belong to this subset.",
-          "$ref": "#/definitions/stringMap"
-        },
-        "trafficPolicy": {
-          "description": "Subset-specific traffic policy forwarded directly to Istio.",
-          "type": "object",
-          "additionalProperties": true
-        }
+      "additionalProperties": {
+        "anyOf": [
+          { "$ref": "#/definitions/resourceItem" },
+          { "type": "null" }
+        ]
       }
-    },
-    "destinationRule": {
-      "description": "Istio DestinationRule specification rendered by the chart.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "host"
-      ],
-      "properties": {
-        "name": {
-          "description": "Explicit name for the rendered DestinationRule resource.",
-          "type": "string"
-        },
-        "namespace": {
-          "description": "Namespace where the rendered DestinationRule should be created.",
-          "type": "string"
-        },
-        "apiVersion": {
-          "description": "Explicit API version override for this DestinationRule.",
-          "type": "string"
-        },
-        "labels": {
-          "description": "Labels applied specifically to this DestinationRule.",
-          "$ref": "#/definitions/stringMap"
-        },
-        "annotations": {
-          "description": "Annotations applied specifically to this DestinationRule.",
-          "$ref": "#/definitions/stringMap"
-        },
-        "host": {
-          "description": "Service host to which this DestinationRule applies.",
-          "type": "string"
-        },
-        "trafficPolicy": {
-          "description": "Top-level traffic policy forwarded directly to Istio.",
-          "type": "object",
-          "additionalProperties": true
-        },
-        "subsets": {
-          "description": "Named subsets available for routing to different endpoint groups.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/destinationRuleSubset"
-          }
-        },
-        "exportTo": {
-          "description": "Namespaces to which this DestinationRule is exported.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "workloadSelector": {
-          "description": "Optional selector limiting this DestinationRule to matching workloads.",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "matchLabels"
-          ],
-          "properties": {
-            "matchLabels": {
-              "description": "Labels used to match workloads affected by this DestinationRule.",
-              "$ref": "#/definitions/stringMap"
-            }
-          }
-        }
-      }
-    },
-    "nullableDestinationRule": {
-      "description": "DestinationRule configuration or null to disable a specific map entry.",
-      "oneOf": [
-        {
-          "$ref": "#/definitions/destinationRule"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "authorizationPolicy": {
-      "description": "Istio AuthorizationPolicy specification rendered by the chart.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "rules"
-      ],
-      "properties": {
-        "name": {
-          "description": "Explicit name for the rendered AuthorizationPolicy resource.",
-          "type": "string"
-        },
-        "namespace": {
-          "description": "Namespace where the rendered AuthorizationPolicy should be created.",
-          "type": "string"
-        },
-        "apiVersion": {
-          "description": "Explicit API version override for this AuthorizationPolicy.",
-          "type": "string"
-        },
-        "labels": {
-          "description": "Labels applied specifically to this AuthorizationPolicy.",
-          "$ref": "#/definitions/stringMap"
-        },
-        "annotations": {
-          "description": "Annotations applied specifically to this AuthorizationPolicy.",
-          "$ref": "#/definitions/stringMap"
-        },
-        "selector": {
-          "description": "Optional workload selector for the AuthorizationPolicy.",
-          "type": "object",
-          "additionalProperties": true
-        },
-        "action": {
-          "description": "Policy action, for example ALLOW or DENY.",
-          "type": "string"
-        },
-        "rules": {
-          "description": "Authorization policy rules forwarded directly to Istio.",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": true
-          }
-        }
-      }
-    },
-    "nullableAuthorizationPolicy": {
-      "description": "AuthorizationPolicy configuration or null to disable a specific map entry.",
-      "oneOf": [
-        {
-          "$ref": "#/definitions/authorizationPolicy"
-        },
-        {
-          "type": "null"
-        }
-      ]
     }
   }
 }

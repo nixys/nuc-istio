@@ -1,164 +1,380 @@
 suite: example resources
 templates:
-  - templates/gateway.yml
-  - templates/virtualservice.yml
-  - templates/destinationrule.yml
   - templates/authorizationpolicy.yml
+  - templates/destinationrule.yml
+  - templates/envoyfilter.yml
+  - templates/gateway.yml
+  - templates/peerauthentication.yml
+  - templates/proxyconfig.yml
+  - templates/requestauthentication.yml
+  - templates/serviceentry.yml
+  - templates/sidecar.yml
+  - templates/telemetry.yml
+  - templates/virtualservice.yml
+  - templates/wasmplugin.yml
+  - templates/workloadentry.yml
+  - templates/workloadgroup.yml
 release:
   name: unit-test
   namespace: unit-namespace
 
 tests:
-  - it: renders the expected document count per template
+  - it: renders two documents for every supported Istio resource template
     values:
       - values/example.values.yaml
     asserts:
       - hasDocuments:
-          count: 1
-        template: templates/gateway.yml
-      - hasDocuments:
-          count: 1
-        template: templates/virtualservice.yml
-      - hasDocuments:
-          count: 1
-        template: templates/destinationrule.yml
-      - hasDocuments:
-          count: 1
+          count: 2
         template: templates/authorizationpolicy.yml
+      - hasDocuments:
+          count: 2
+        template: templates/destinationrule.yml
+      - hasDocuments:
+          count: 2
+        template: templates/envoyfilter.yml
+      - hasDocuments:
+          count: 2
+        template: templates/gateway.yml
+      - hasDocuments:
+          count: 2
+        template: templates/peerauthentication.yml
+      - hasDocuments:
+          count: 2
+        template: templates/proxyconfig.yml
+      - hasDocuments:
+          count: 2
+        template: templates/requestauthentication.yml
+      - hasDocuments:
+          count: 2
+        template: templates/serviceentry.yml
+      - hasDocuments:
+          count: 2
+        template: templates/sidecar.yml
+      - hasDocuments:
+          count: 2
+        template: templates/telemetry.yml
+      - hasDocuments:
+          count: 2
+        template: templates/virtualservice.yml
+      - hasDocuments:
+          count: 2
+        template: templates/wasmplugin.yml
+      - hasDocuments:
+          count: 2
+        template: templates/workloadentry.yml
+      - hasDocuments:
+          count: 2
+        template: templates/workloadgroup.yml
 
-  - it: renders the expected example manifests
+  - it: renders expected example manifests without chart-name prefixes
     values:
       - values/example.values.yaml
     asserts:
-      - containsDocument:
-          kind: Gateway
-          apiVersion: networking.istio.io/v1beta1
-          name: istio-platform-public-gateway
-          namespace: unit-namespace
-          any: true
-        template: templates/gateway.yml
-      - containsDocument:
-          kind: VirtualService
-          apiVersion: networking.istio.io/v1beta1
-          name: unit-test-public
-          namespace: unit-namespace
-          any: true
-        template: templates/virtualservice.yml
-      - containsDocument:
-          kind: DestinationRule
-          apiVersion: networking.istio.io/v1beta1
-          name: istio-platform-api-destination
-          namespace: unit-namespace
-          any: true
-        template: templates/destinationrule.yml
       - containsDocument:
           kind: AuthorizationPolicy
-          apiVersion: security.istio.io/v1beta1
-          name: vpn-wl
+          apiVersion: security.istio.io/v1
+          name: ingress-allow
           namespace: istio-system
           any: true
         template: templates/authorizationpolicy.yml
+      - containsDocument:
+          kind: DestinationRule
+          apiVersion: networking.istio.io/v1
+          name: api-backend
+          namespace: unit-namespace
+          any: true
+        template: templates/destinationrule.yml
+      - containsDocument:
+          kind: EnvoyFilter
+          apiVersion: networking.istio.io/v1alpha3
+          name: ingress-headers
+          namespace: istio-system
+          any: true
+        template: templates/envoyfilter.yml
+      - containsDocument:
+          kind: Gateway
+          apiVersion: networking.istio.io/v1
+          name: public-gateway
+          namespace: unit-namespace
+          any: true
+        template: templates/gateway.yml
+      - containsDocument:
+          kind: PeerAuthentication
+          apiVersion: security.istio.io/v1
+          name: default-mtls
+          namespace: istio-system
+          any: true
+        template: templates/peerauthentication.yml
+      - containsDocument:
+          kind: ProxyConfig
+          apiVersion: networking.istio.io/v1beta1
+          name: ingress-defaults
+          namespace: istio-system
+          any: true
+        template: templates/proxyconfig.yml
+      - containsDocument:
+          kind: RequestAuthentication
+          apiVersion: security.istio.io/v1
+          name: public-jwt
+          namespace: unit-namespace
+          any: true
+        template: templates/requestauthentication.yml
+      - containsDocument:
+          kind: ServiceEntry
+          apiVersion: networking.istio.io/v1
+          name: payments-external
+          namespace: unit-namespace
+          any: true
+        template: templates/serviceentry.yml
+      - containsDocument:
+          kind: Sidecar
+          apiVersion: networking.istio.io/v1
+          name: api-sidecar
+          namespace: unit-namespace
+          any: true
+        template: templates/sidecar.yml
+      - containsDocument:
+          kind: Telemetry
+          apiVersion: telemetry.istio.io/v1
+          name: default-metrics
+          namespace: istio-system
+          any: true
+        template: templates/telemetry.yml
+      - containsDocument:
+          kind: VirtualService
+          apiVersion: networking.istio.io/v1
+          name: public-api
+          namespace: unit-namespace
+          any: true
+        template: templates/virtualservice.yml
+      - containsDocument:
+          kind: WasmPlugin
+          apiVersion: extensions.istio.io/v1alpha1
+          name: authn-filter
+          namespace: istio-system
+          any: true
+        template: templates/wasmplugin.yml
+      - containsDocument:
+          kind: WorkloadEntry
+          apiVersion: networking.istio.io/v1
+          name: vm-east
+          namespace: unit-namespace
+          any: true
+        template: templates/workloadentry.yml
+      - containsDocument:
+          kind: WorkloadGroup
+          apiVersion: networking.istio.io/v1
+          name: ratings-vm-group
+          namespace: unit-namespace
+          any: true
+        template: templates/workloadgroup.yml
 
-  - it: renders the Gateway example
-    values:
-      - values/example.values.yaml
-    template: templates/gateway.yml
-    documentSelector:
-      path: metadata.name
-      value: istio-platform-public-gateway
-    asserts:
-      - isKind:
-          of: Gateway
-      - equal:
-          path: metadata.namespace
-          value: unit-namespace
-      - equal:
-          path: spec.servers[0].hosts[0]
-          value: example.org
-      - equal:
-          path: spec.servers[1].tls.credentialName
-          value: public-gateway-tls
-
-  - it: renders the VirtualService example
-    values:
-      - values/example.values.yaml
-    template: templates/virtualservice.yml
-    documentSelector:
-      path: metadata.name
-      value: unit-test-public
-    asserts:
-      - isKind:
-          of: VirtualService
-      - equal:
-          path: spec.hosts[1]
-          value: api.example.org
-      - equal:
-          path: spec.gateways[1]
-          value: mesh
-      - equal:
-          path: spec.http[0].retries.attempts
-          value: 3
-      - equal:
-          path: spec.http[0].timeout
-          value: 10s
-      - equal:
-          path: spec.http[0].rewrite.uri
-          value: /
-      - equal:
-          path: spec.http[1].fault.abort.httpStatus
-          value: 503
-      - equal:
-          path: spec.tls[0].match[0].sniHosts[0]
-          value: secure.example.org
-      - equal:
-          path: spec.tcp[0].route[0].destination.host
-          value: mysql.default.svc.cluster.local
-
-  - it: renders the DestinationRule example
-    values:
-      - values/example.values.yaml
-    template: templates/destinationrule.yml
-    documentSelector:
-      path: metadata.name
-      value: istio-platform-api-destination
-    asserts:
-      - isKind:
-          of: DestinationRule
-      - equal:
-          path: spec.trafficPolicy.loadBalancer.simple
-          value: ROUND_ROBIN
-      - equal:
-          path: spec.subsets[0].trafficPolicy.loadBalancer.simple
-          value: LEAST_CONN
-      - equal:
-          path: spec.exportTo[1]
-          value: observability
-      - equal:
-          path: spec.workloadSelector.matchLabels.app
-          value: api
-
-  - it: renders the AuthorizationPolicy example
+  - it: renders AuthorizationPolicy examples
     values:
       - values/example.values.yaml
     template: templates/authorizationpolicy.yml
     documentSelector:
       path: metadata.name
-      value: vpn-wl
+      value: api-deny-post
     asserts:
-      - isKind:
-          of: AuthorizationPolicy
+      - equal:
+          path: spec.action
+          value: DENY
+      - equal:
+          path: spec.rules[0].to[0].operation.methods[0]
+          value: POST
+
+  - it: renders DestinationRule examples
+    values:
+      - values/example.values.yaml
+    template: templates/destinationrule.yml
+    documentSelector:
+      path: metadata.name
+      value: payments-backend
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: payments
+      - equal:
+          path: spec.exportTo[1]
+          value: observability
+
+  - it: renders EnvoyFilter examples
+    values:
+      - values/example.values.yaml
+    template: templates/envoyfilter.yml
+    documentSelector:
+      path: metadata.name
+      value: ingress-headers
+    asserts:
+      - equal:
+          path: spec.workloadSelector.labels.istio
+          value: ingressgateway
+      - equal:
+          path: spec.configPatches[0].patch.value.name
+          value: envoy.filters.http.lua
+
+  - it: renders Gateway examples
+    values:
+      - values/example.values.yaml
+    template: templates/gateway.yml
+    documentSelector:
+      path: metadata.name
+      value: public-gateway
+    asserts:
+      - equal:
+          path: spec.servers[0].hosts[0]
+          value: example.org
+      - equal:
+          path: metadata.labels.managed-by-layer
+          value: dependency
+
+  - it: renders PeerAuthentication examples
+    values:
+      - values/example.values.yaml
+    template: templates/peerauthentication.yml
+    documentSelector:
+      path: metadata.name
+      value: permissive-legacy
+    asserts:
+      - equal:
+          path: spec.mtls.mode
+          value: PERMISSIVE
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: legacy
+
+  - it: renders ProxyConfig examples
+    values:
+      - values/example.values.yaml
+    template: templates/proxyconfig.yml
+    documentSelector:
+      path: metadata.name
+      value: ingress-defaults
+    asserts:
+      - equal:
+          path: spec.concurrency
+          value: 2
       - equal:
           path: metadata.namespace
           value: istio-system
+
+  - it: renders RequestAuthentication examples
+    values:
+      - values/example.values.yaml
+    template: templates/requestauthentication.yml
+    documentSelector:
+      path: metadata.name
+      value: public-jwt
+    asserts:
       - equal:
-          path: spec.action
-          value: ALLOW
+          path: spec.jwtRules[0].issuer
+          value: https://issuer.example.org
       - equal:
-          path: spec.selector.matchLabels.istio
-          value: main-gateway
+          path: spec.selector.matchLabels.app
+          value: api
+
+  - it: renders ServiceEntry examples
+    values:
+      - values/example.values.yaml
+    template: templates/serviceentry.yml
+    documentSelector:
+      path: metadata.name
+      value: s3-external
+    asserts:
       - equal:
-          path: spec.rules[0].from[0].source.remoteIpBlocks[0]
-          value: 212.27.246.18/32
+          path: spec.location
+          value: MESH_EXTERNAL
       - equal:
-          path: spec.rules[0].to[0].operation.hosts[0]
-          value: alertmanager.example.com
+          path: spec.hosts[0]
+          value: s3.amazonaws.com
+
+  - it: renders Sidecar examples
+    values:
+      - values/example.values.yaml
+    template: templates/sidecar.yml
+    documentSelector:
+      path: metadata.name
+      value: jobs-sidecar
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: jobs
+      - equal:
+          path: spec.outboundTrafficPolicy.mode
+          value: REGISTRY_ONLY
+
+  - it: renders Telemetry examples
+    values:
+      - values/example.values.yaml
+    template: templates/telemetry.yml
+    documentSelector:
+      path: metadata.name
+      value: ingress-access-logs
+    asserts:
+      - equal:
+          path: spec.accessLogging[0].providers[0].name
+          value: envoy
+      - equal:
+          path: metadata.namespace
+          value: unit-namespace
+
+  - it: renders VirtualService examples
+    values:
+      - values/example.values.yaml
+    template: templates/virtualservice.yml
+    documentSelector:
+      path: metadata.name
+      value: public-api
+    asserts:
+      - equal:
+          path: spec.hosts[1]
+          value: api.example.org
+      - equal:
+          path: spec.http[0].route[0].destination.host
+          value: api.default.svc.cluster.local
+
+  - it: renders WasmPlugin examples
+    values:
+      - values/example.values.yaml
+    template: templates/wasmplugin.yml
+    documentSelector:
+      path: metadata.name
+      value: metrics-filter
+    asserts:
+      - equal:
+          path: spec.phase
+          value: STATS
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: api
+
+  - it: renders WorkloadEntry examples
+    values:
+      - values/example.values.yaml
+    template: templates/workloadentry.yml
+    documentSelector:
+      path: metadata.name
+      value: vm-west
+    asserts:
+      - equal:
+          path: spec.address
+          value: 10.10.0.12
+      - equal:
+          path: spec.labels.instance-id
+          value: west-1
+
+  - it: renders WorkloadGroup examples
+    values:
+      - values/example.values.yaml
+    template: templates/workloadgroup.yml
+    documentSelector:
+      path: metadata.name
+      value: jobs-vm-group
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: jobs
+      - equal:
+          path: spec.template.serviceAccount
+          value: jobs-vm

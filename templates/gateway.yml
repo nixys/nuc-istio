@@ -1,6 +1,8 @@
-{{- range $name := keys ($.Values.gateways | default dict) | sortAlpha }}
-{{- $gateway := get $.Values.gateways $name -}}
-{{- if and (ne $name "__helm_docs_example__") $gateway }}
-{{ include "nuc-istio.renderGateway" (dict "root" $ "name" $name "item" $gateway) }}
-{{- end }}
-{{- end -}}
+{{ include "nuc-istio.renderResources" (dict
+  "root" $
+  "collection" ($.Values.gateways | default dict)
+  "resourceKey" "gateways"
+  "kind" "Gateway"
+  "defaultApiVersion" (include "nuc-istio.resolveApiVersion" (dict "root" $ "key" "gateway" "legacyKey" "istioGateway" "default" "networking.istio.io/v1"))
+  "namespaced" true
+) }}

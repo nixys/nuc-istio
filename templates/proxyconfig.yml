@@ -1,0 +1,8 @@
+{{ include "nuc-istio.renderResources" (dict
+  "root" $
+  "collection" ($.Values.proxyconfigs | default dict)
+  "resourceKey" "proxyconfigs"
+  "kind" "ProxyConfig"
+  "defaultApiVersion" (include "nuc-istio.resolveApiVersion" (dict "root" $ "key" "proxyConfig" "legacyKey" "istioProxyConfig" "default" "networking.istio.io/v1beta1"))
+  "namespaced" true
+) }}

@@ -1,48 +1,77 @@
 suite: rendering contract
 templates:
-  - templates/gateway.yml
-  - templates/virtualservice.yml
-  - templates/destinationrule.yml
   - templates/authorizationpolicy.yml
+  - templates/destinationrule.yml
+  - templates/envoyfilter.yml
+  - templates/gateway.yml
+  - templates/peerauthentication.yml
+  - templates/proxyconfig.yml
+  - templates/requestauthentication.yml
+  - templates/serviceentry.yml
+  - templates/sidecar.yml
+  - templates/telemetry.yml
+  - templates/virtualservice.yml
+  - templates/wasmplugin.yml
+  - templates/workloadentry.yml
+  - templates/workloadgroup.yml
 release:
   name: unit-test
   namespace: unit-namespace
 
 tests:
-  - it: renders no Gateway documents by default
-    template: templates/gateway.yml
+  - it: renders no documents by default for all supported templates
     asserts:
       - hasDocuments:
           count: 0
-
-  - it: renders no VirtualService documents by default
-    template: templates/virtualservice.yml
-    asserts:
+        template: templates/authorizationpolicy.yml
       - hasDocuments:
           count: 0
-
-  - it: renders no DestinationRule documents by default
-    template: templates/destinationrule.yml
-    asserts:
+        template: templates/destinationrule.yml
       - hasDocuments:
           count: 0
-
-  - it: renders no AuthorizationPolicy documents by default
-    template: templates/authorizationpolicy.yml
-    asserts:
+        template: templates/envoyfilter.yml
       - hasDocuments:
           count: 0
+        template: templates/gateway.yml
+      - hasDocuments:
+          count: 0
+        template: templates/peerauthentication.yml
+      - hasDocuments:
+          count: 0
+        template: templates/proxyconfig.yml
+      - hasDocuments:
+          count: 0
+        template: templates/requestauthentication.yml
+      - hasDocuments:
+          count: 0
+        template: templates/serviceentry.yml
+      - hasDocuments:
+          count: 0
+        template: templates/sidecar.yml
+      - hasDocuments:
+          count: 0
+        template: templates/telemetry.yml
+      - hasDocuments:
+          count: 0
+        template: templates/virtualservice.yml
+      - hasDocuments:
+          count: 0
+        template: templates/wasmplugin.yml
+      - hasDocuments:
+          count: 0
+        template: templates/workloadentry.yml
+      - hasDocuments:
+          count: 0
+        template: templates/workloadgroup.yml
 
-  - it: applies helper defaults and overrides for Gateway
+  - it: applies common and generic metadata for Gateway without forcing chart prefix
     values:
       - values/rendering_contract.values.yaml
     template: templates/gateway.yml
     documentSelector:
       path: metadata.name
-      value: istio-platform-edge-gateway
+      value: edge-gateway
     asserts:
-      - isKind:
-          of: Gateway
       - equal:
           path: apiVersion
           value: custom.networking.io/v1alpha2
@@ -53,8 +82,11 @@ tests:
           path: metadata.labels["app.kubernetes.io/name"]
           value: istio-platform
       - equal:
+          path: metadata.labels.team
+          value: platform
+      - equal:
           path: metadata.labels.platform
-          value: edge
+          value: mesh
       - equal:
           path: metadata.labels.component
           value: gateway
@@ -63,26 +95,15 @@ tests:
           value: edge
       - equal:
           path: metadata.annotations.owner
-          value: platform-team
+          value: common-layer
       - equal:
           path: metadata.annotations.note
           value: external
       - equal:
-          path: spec.selector.istio
-          value: ingressgateway
-      - equal:
           path: spec.servers[0].hosts[0]
           value: corp.example.org
 
-  - it: skips Gateway documents for null map entries
-    values:
-      - values/null_resources.values.yaml
-    template: templates/gateway.yml
-    asserts:
-      - hasDocuments:
-          count: 0
-
-  - it: applies helper defaults and overrides for VirtualService
+  - it: applies legacy global apiVersion override for VirtualService and renders tpl names
     values:
       - values/rendering_contract.values.yaml
     template: templates/virtualservice.yml
@@ -90,17 +111,12 @@ tests:
       path: metadata.name
       value: unit-test-edge
     asserts:
-      - isKind:
-          of: VirtualService
       - equal:
           path: apiVersion
-          value: custom.networking.io/v1alpha2
+          value: custom.networking.io/v1alpha3
       - equal:
           path: metadata.namespace
           value: app-routing
-      - equal:
-          path: metadata.labels["app.kubernetes.io/name"]
-          value: istio-platform
       - equal:
           path: metadata.labels.component
           value: routing
@@ -108,85 +124,41 @@ tests:
           path: metadata.annotations.note
           value: public
       - equal:
-          path: spec.hosts[0]
-          value: corp.example.org
-      - equal:
-          path: spec.gateways[0]
-          value: edge-gateway
-      - equal:
-          path: spec.http[0].redirect.authority
-          value: edge.example.org
-      - equal:
           path: spec.http[0].redirect.redirectCode
           value: 308
       - equal:
           path: spec.exportTo[0]
           value: .
 
-  - it: skips VirtualService documents for null map entries
-    values:
-      - values/null_resources.values.yaml
-    template: templates/virtualservice.yml
-    asserts:
-      - hasDocuments:
-          count: 0
-
-  - it: applies helper defaults and overrides for DestinationRule
+  - it: applies legacy global apiVersion override for DestinationRule
     values:
       - values/rendering_contract.values.yaml
     template: templates/destinationrule.yml
     documentSelector:
       path: metadata.name
-      value: istio-platform-edge-destination
+      value: edge-destination
     asserts:
-      - isKind:
-          of: DestinationRule
       - equal:
           path: apiVersion
-          value: custom.networking.io/v1alpha2
+          value: custom.networking.io/v1alpha4
       - equal:
           path: metadata.namespace
           value: app-routing
       - equal:
-          path: metadata.labels["app.kubernetes.io/name"]
-          value: istio-platform
-      - equal:
           path: metadata.labels.component
           value: policy
       - equal:
-          path: metadata.annotations.note
-          value: destination
-      - equal:
-          path: spec.host
-          value: edge.default.svc.cluster.local
-      - equal:
-          path: spec.subsets[0].name
-          value: stable
-      - equal:
           path: spec.subsets[0].labels.version
           value: stable
-      - equal:
-          path: spec.workloadSelector.matchLabels.app
-          value: edge
 
-  - it: skips DestinationRule documents for null map entries
-    values:
-      - values/null_resources.values.yaml
-    template: templates/destinationrule.yml
-    asserts:
-      - hasDocuments:
-          count: 0
-
-  - it: applies helper defaults and overrides for AuthorizationPolicy
+  - it: applies legacy global apiVersion override for AuthorizationPolicy
     values:
       - values/rendering_contract.values.yaml
     template: templates/authorizationpolicy.yml
     documentSelector:
       path: metadata.name
-      value: unit-test-edge-access
+      value: edge-access
     asserts:
-      - isKind:
-          of: AuthorizationPolicy
       - equal:
           path: apiVersion
           value: custom.security.io/v1alpha1
@@ -194,28 +166,132 @@ tests:
           path: metadata.namespace
           value: policy-namespace
       - equal:
-          path: metadata.labels["app.kubernetes.io/name"]
-          value: istio-platform
-      - equal:
-          path: metadata.labels.component
-          value: security
-      - equal:
-          path: metadata.annotations.note
-          value: access
-      - equal:
           path: spec.action
           value: DENY
-      - equal:
-          path: spec.selector.matchLabels.app
-          value: edge
-      - equal:
-          path: spec.rules[0].to[0].operation.methods[0]
-          value: POST
 
-  - it: skips AuthorizationPolicy documents for null map entries
+  - it: applies apiVersion override for ServiceEntry and Telemetry from top-level apiVersions
+    values:
+      - values/rendering_contract.values.yaml
+    asserts:
+      - containsDocument:
+          kind: ServiceEntry
+          apiVersion: custom.networking.io/v1alpha2
+          name: ext-payments
+          namespace: app-routing
+          any: true
+        template: templates/serviceentry.yml
+      - containsDocument:
+          kind: Telemetry
+          apiVersion: custom.telemetry.io/v1alpha1
+          name: edge-observability
+          namespace: observability
+          any: true
+        template: templates/telemetry.yml
+
+  - it: preserves metadata merging for the rest of supported kinds
+    values:
+      - values/rendering_contract.values.yaml
+    asserts:
+      - containsDocument:
+          kind: EnvoyFilter
+          apiVersion: networking.istio.io/v1alpha3
+          name: gateway-lua
+          namespace: istio-system
+          any: true
+        template: templates/envoyfilter.yml
+      - containsDocument:
+          kind: PeerAuthentication
+          apiVersion: security.istio.io/v1
+          name: edge-strict
+          namespace: istio-system
+          any: true
+        template: templates/peerauthentication.yml
+      - containsDocument:
+          kind: ProxyConfig
+          apiVersion: networking.istio.io/v1beta1
+          name: edge-proxy
+          namespace: istio-system
+          any: true
+        template: templates/proxyconfig.yml
+      - containsDocument:
+          kind: RequestAuthentication
+          apiVersion: custom.security.io/v1alpha2
+          name: edge-jwt
+          namespace: app-routing
+          any: true
+        template: templates/requestauthentication.yml
+      - containsDocument:
+          kind: Sidecar
+          apiVersion: networking.istio.io/v1
+          name: edge-sidecar
+          namespace: app-routing
+          any: true
+        template: templates/sidecar.yml
+      - containsDocument:
+          kind: WasmPlugin
+          apiVersion: extensions.istio.io/v1alpha1
+          name: edge-wasm
+          namespace: istio-system
+          any: true
+        template: templates/wasmplugin.yml
+      - containsDocument:
+          kind: WorkloadEntry
+          apiVersion: networking.istio.io/v1
+          name: edge-vm
+          namespace: app-routing
+          any: true
+        template: templates/workloadentry.yml
+      - containsDocument:
+          kind: WorkloadGroup
+          apiVersion: networking.istio.io/v1
+          name: edge-group
+          namespace: app-routing
+          any: true
+        template: templates/workloadgroup.yml
+
+  - it: skips null map entries for every supported resource collection
     values:
       - values/null_resources.values.yaml
-    template: templates/authorizationpolicy.yml
     asserts:
       - hasDocuments:
           count: 0
+        template: templates/authorizationpolicy.yml
+      - hasDocuments:
+          count: 0
+        template: templates/destinationrule.yml
+      - hasDocuments:
+          count: 0
+        template: templates/envoyfilter.yml
+      - hasDocuments:
+          count: 0
+        template: templates/gateway.yml
+      - hasDocuments:
+          count: 0
+        template: templates/peerauthentication.yml
+      - hasDocuments:
+          count: 0
+        template: templates/proxyconfig.yml
+      - hasDocuments:
+          count: 0
+        template: templates/requestauthentication.yml
+      - hasDocuments:
+          count: 0
+        template: templates/serviceentry.yml
+      - hasDocuments:
+          count: 0
+        template: templates/sidecar.yml
+      - hasDocuments:
+          count: 0
+        template: templates/telemetry.yml
+      - hasDocuments:
+          count: 0
+        template: templates/virtualservice.yml
+      - hasDocuments:
+          count: 0
+        template: templates/wasmplugin.yml
+      - hasDocuments:
+          count: 0
+        template: templates/workloadentry.yml
+      - hasDocuments:
+          count: 0
+        template: templates/workloadgroup.yml

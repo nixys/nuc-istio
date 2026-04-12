@@ -1,0 +1,8 @@
+{{ include "nuc-istio.renderResources" (dict
+  "root" $
+  "collection" ($.Values.wasmplugins | default dict)
+  "resourceKey" "wasmplugins"
+  "kind" "WasmPlugin"
+  "defaultApiVersion" (include "nuc-istio.resolveApiVersion" (dict "root" $ "key" "wasmPlugin" "legacyKey" "istioWasmPlugin" "default" "extensions.istio.io/v1alpha1"))
+  "namespaced" true
+) }}

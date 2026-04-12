@@ -1,0 +1,8 @@
+{{ include "nuc-istio.renderResources" (dict
+  "root" $
+  "collection" ($.Values.envoyfilters | default dict)
+  "resourceKey" "envoyfilters"
+  "kind" "EnvoyFilter"
+  "defaultApiVersion" (include "nuc-istio.resolveApiVersion" (dict "root" $ "key" "envoyFilter" "legacyKey" "istioEnvoyFilter" "default" "networking.istio.io/v1alpha3"))
+  "namespaced" true
+) }}

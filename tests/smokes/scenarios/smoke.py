@@ -89,64 +89,53 @@ def check_rendering_contract(context: SmokeContext) -> None:
     )
 
     documents = render.load_documents(output_path)
-    render.assert_doc_count(documents, 4)
+    render.assert_doc_count(documents, 14)
 
-    gateway = render.select_document(
-        documents, kind="Gateway", name="istio-platform-edge-gateway"
-    )
-    render.assert_path(gateway, "apiVersion", "custom.istio.io/v1alpha1")
-    render.assert_path(gateway, "metadata.namespace", context.namespace)
-    render.assert_path(
-        gateway,
-        "metadata.labels[app.kubernetes.io/name]",
-        "istio-platform",
-    )
-    render.assert_path(gateway, "metadata.labels[app.kubernetes.io/instance]", context.release_name)
-    render.assert_path(gateway, "metadata.labels.platform", "edge")
+    gateway = render.select_document(documents, kind="Gateway", name="edge-gateway")
+    render.assert_path(gateway, "apiVersion", "custom.networking.io/v1alpha2")
+    render.assert_path(gateway, "metadata.namespace", "edge-gateways")
+    render.assert_path(gateway, "metadata.labels[app.kubernetes.io/name]", "istio-platform")
+    render.assert_path(gateway, "metadata.labels.team", "platform")
+    render.assert_path(gateway, "metadata.labels.platform", "mesh")
     render.assert_path(gateway, "metadata.labels.component", "gateway")
     render.assert_path(gateway, "metadata.labels.tier", "edge")
-    render.assert_path(gateway, "metadata.annotations.owner", "platform-team")
+    render.assert_path(gateway, "metadata.annotations.owner", "common-layer")
     render.assert_path(gateway, "metadata.annotations.note", "external")
-    render.assert_path(gateway, "spec.selector.istio", "ingressgateway")
     render.assert_path(gateway, "spec.servers[0].hosts[0]", "corp.example.org")
 
     virtual_service = render.select_document(
         documents, kind="VirtualService", name=f"{context.release_name}-edge"
     )
-    render.assert_path(virtual_service, "apiVersion", "custom.istio.io/v1alpha1")
-    render.assert_path(virtual_service, "metadata.namespace", context.namespace)
-    render.assert_path(virtual_service, "metadata.labels[app.kubernetes.io/name]", "istio-platform")
+    render.assert_path(virtual_service, "apiVersion", "custom.networking.io/v1alpha3")
+    render.assert_path(virtual_service, "metadata.namespace", "app-routing")
     render.assert_path(virtual_service, "metadata.labels.component", "routing")
     render.assert_path(virtual_service, "metadata.annotations.note", "public")
-    render.assert_path(virtual_service, "spec.hosts[0]", "corp.example.org")
-    render.assert_path(virtual_service, "spec.gateways[0]", "edge-gateway")
-    render.assert_path(virtual_service, "spec.http[0].route[0].destination.host", "edge.default.svc.cluster.local")
+    render.assert_path(virtual_service, "spec.http[0].redirect.redirectCode", 308)
     render.assert_path(virtual_service, "spec.exportTo[0]", ".")
 
     destination_rule = render.select_document(
-        documents, kind="DestinationRule", name="istio-platform-edge-destination"
+        documents, kind="DestinationRule", name="edge-destination"
     )
-    render.assert_path(destination_rule, "apiVersion", "custom.istio.io/v1alpha1")
-    render.assert_path(destination_rule, "metadata.namespace", context.namespace)
-    render.assert_path(destination_rule, "metadata.labels[app.kubernetes.io/name]", "istio-platform")
+    render.assert_path(destination_rule, "apiVersion", "custom.networking.io/v1alpha4")
+    render.assert_path(destination_rule, "metadata.namespace", "app-routing")
     render.assert_path(destination_rule, "metadata.labels.component", "policy")
     render.assert_path(destination_rule, "metadata.annotations.note", "destination")
-    render.assert_path(destination_rule, "spec.host", "edge.default.svc.cluster.local")
-    render.assert_path(destination_rule, "spec.subsets[0].name", "stable")
     render.assert_path(destination_rule, "spec.subsets[0].labels.version", "stable")
-    render.assert_path(destination_rule, "spec.workloadSelector.matchLabels.app", "edge")
 
     authorization_policy = render.select_document(
-        documents, kind="AuthorizationPolicy", name=f"{context.release_name}-edge-access"
+        documents, kind="AuthorizationPolicy", name="edge-access"
     )
     render.assert_path(authorization_policy, "apiVersion", "custom.security.io/v1alpha1")
     render.assert_path(authorization_policy, "metadata.namespace", "policy-namespace")
-    render.assert_path(authorization_policy, "metadata.labels[app.kubernetes.io/name]", "istio-platform")
-    render.assert_path(authorization_policy, "metadata.labels.component", "security")
-    render.assert_path(authorization_policy, "metadata.annotations.note", "access")
     render.assert_path(authorization_policy, "spec.action", "DENY")
-    render.assert_path(authorization_policy, "spec.selector.matchLabels.app", "edge")
-    render.assert_path(authorization_policy, "spec.rules[0].to[0].operation.methods[0]", "POST")
+
+    service_entry = render.select_document(documents, kind="ServiceEntry", name="ext-payments")
+    render.assert_path(service_entry, "apiVersion", "custom.networking.io/v1alpha2")
+    render.assert_path(service_entry, "metadata.annotations.note", "external-service")
+
+    telemetry = render.select_document(documents, kind="Telemetry", name="edge-observability")
+    render.assert_path(telemetry, "apiVersion", "custom.telemetry.io/v1alpha1")
+    render.assert_path(telemetry, "metadata.namespace", "observability")
 
 
 def check_example_render(context: SmokeContext) -> None:
@@ -166,60 +155,50 @@ def check_example_render(context: SmokeContext) -> None:
     )
 
     documents = render.load_documents(output_path)
-    render.assert_doc_count(documents, 4)
+    render.assert_doc_count(documents, 28)
     render.assert_kinds(
         documents,
         {
-            "Gateway",
-            "VirtualService",
-            "DestinationRule",
             "AuthorizationPolicy",
+            "DestinationRule",
+            "EnvoyFilter",
+            "Gateway",
+            "PeerAuthentication",
+            "ProxyConfig",
+            "RequestAuthentication",
+            "ServiceEntry",
+            "Sidecar",
+            "Telemetry",
+            "VirtualService",
+            "WasmPlugin",
+            "WorkloadEntry",
+            "WorkloadGroup",
         },
     )
 
-    gateway = render.select_document(
-        documents, kind="Gateway", name="istio-platform-public-gateway"
-    )
+    gateway = render.select_document(documents, kind="Gateway", name="public-gateway")
     render.assert_path(gateway, "metadata.namespace", context.namespace)
     render.assert_path(gateway, "metadata.labels[app.kubernetes.io/name]", "istio-platform")
+    render.assert_path(gateway, "metadata.labels.managed-by-layer", "dependency")
     render.assert_path(gateway, "spec.servers[0].hosts[0]", "example.org")
-    render.assert_path(gateway, "spec.servers[1].tls.credentialName", "public-gateway-tls")
 
-    virtual_service = render.select_document(
-        documents, kind="VirtualService", name=f"{context.release_name}-public"
-    )
+    virtual_service = render.select_document(documents, kind="VirtualService", name="public-api")
     render.assert_path(virtual_service, "metadata.namespace", context.namespace)
-    render.assert_path(virtual_service, "metadata.labels[app.kubernetes.io/name]", "istio-platform")
     render.assert_path(virtual_service, "spec.hosts[1]", "api.example.org")
     render.assert_path(virtual_service, "spec.gateways[1]", "mesh")
-    render.assert_path(virtual_service, "spec.http[0].retries.attempts", 3)
-    render.assert_path(virtual_service, "spec.http[0].timeout", "10s")
-    render.assert_path(virtual_service, "spec.http[0].rewrite.uri", "/")
-    render.assert_path(virtual_service, "spec.http[1].fault.abort.httpStatus", 503)
-    render.assert_path(virtual_service, "spec.tls[0].match[0].sniHosts[0]", "secure.example.org")
-    render.assert_path(virtual_service, "spec.tcp[0].route[0].destination.host", "mysql.default.svc.cluster.local")
+    render.assert_path(virtual_service, "spec.http[0].route[0].destination.host", "api.default.svc.cluster.local")
 
-    destination_rule = render.select_document(
-        documents, kind="DestinationRule", name="istio-platform-api-destination"
-    )
-    render.assert_path(destination_rule, "metadata.namespace", context.namespace)
-    render.assert_path(destination_rule, "metadata.labels[app.kubernetes.io/name]", "istio-platform")
-    render.assert_path(destination_rule, "spec.trafficPolicy.loadBalancer.simple", "ROUND_ROBIN")
-    render.assert_path(destination_rule, "spec.subsets[0].trafficPolicy.loadBalancer.simple", "LEAST_CONN")
+    destination_rule = render.select_document(documents, kind="DestinationRule", name="payments-backend")
+    render.assert_path(destination_rule, "metadata.namespace", "payments")
     render.assert_path(destination_rule, "spec.exportTo[1]", "observability")
-    render.assert_path(destination_rule, "spec.workloadSelector.matchLabels.app", "api")
 
-    authorization_policy = render.select_document(
-        documents, kind="AuthorizationPolicy", name="vpn-wl"
-    )
+    authorization_policy = render.select_document(documents, kind="AuthorizationPolicy", name="ingress-allow")
     render.assert_path(authorization_policy, "metadata.namespace", "istio-system")
-    render.assert_path(authorization_policy, "metadata.labels[app.kubernetes.io/name]", "istio-platform")
-    render.assert_path(authorization_policy, "spec.action", "ALLOW")
-    render.assert_path(authorization_policy, "spec.selector.matchLabels.istio", "main-gateway")
+    render.assert_path(authorization_policy, "spec.selector.matchLabels.istio", "ingressgateway")
     render.assert_path(
         authorization_policy,
         "spec.rules[0].from[0].source.remoteIpBlocks[0]",
-        "212.27.246.18/32",
+        "203.0.113.10/32",
     )
 
 

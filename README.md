@@ -79,11 +79,40 @@ This section is generated from [values.yaml](values.yaml) by `helm-docs`. Edit [
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| authorizationpolicies | object | `{}` |  |
-| destinationrules | object | `{}` |  |
-| enabled | bool | `true` |  |
-| gateways | object | `{}` |  |
-| virtualservices | object | `{}` |  |
+| apiVersions.authorizationPolicy | string | `"security.istio.io/v1"` |  |
+| apiVersions.destinationRule | string | `"networking.istio.io/v1"` |  |
+| apiVersions.envoyFilter | string | `"networking.istio.io/v1alpha3"` |  |
+| apiVersions.gateway | string | `"networking.istio.io/v1"` |  |
+| apiVersions.peerAuthentication | string | `"security.istio.io/v1"` |  |
+| apiVersions.proxyConfig | string | `"networking.istio.io/v1beta1"` |  |
+| apiVersions.requestAuthentication | string | `"security.istio.io/v1"` |  |
+| apiVersions.serviceEntry | string | `"networking.istio.io/v1"` |  |
+| apiVersions.sidecar | string | `"networking.istio.io/v1"` |  |
+| apiVersions.telemetry | string | `"telemetry.istio.io/v1"` |  |
+| apiVersions.virtualService | string | `"networking.istio.io/v1"` |  |
+| apiVersions.wasmPlugin | string | `"extensions.istio.io/v1alpha1"` |  |
+| apiVersions.workloadEntry | string | `"networking.istio.io/v1"` |  |
+| apiVersions.workloadGroup | string | `"networking.istio.io/v1"` |  |
+| authorizationpolicies | object | `{"__helm_docs_example__":{"annotations":{},"apiVersion":"security.istio.io/v1","labels":{},"namespace":"documentation-placeholder","spec":{},"status":{}}}` | AuthorizationPolicy resources keyed by resource name. |
+| commonAnnotations | object | `{}` | Extra annotations applied to every rendered resource. |
+| commonLabels | object | `{}` | Extra labels applied to every rendered resource. |
+| destinationrules | object | `{"__helm_docs_example__":{"annotations":{},"apiVersion":"networking.istio.io/v1","labels":{},"namespace":"documentation-placeholder","spec":{},"status":{}}}` | DestinationRule resources keyed by resource name. |
+| enabled | bool | `true` | Enable nuc-istio chart rendering. |
+| envoyfilters | object | `{"__helm_docs_example__":{"annotations":{},"apiVersion":"networking.istio.io/v1alpha3","labels":{},"namespace":"documentation-placeholder","spec":{},"status":{}}}` | EnvoyFilter resources keyed by resource name. |
+| gateways | object | `{"__helm_docs_example__":{"annotations":{},"apiVersion":"networking.istio.io/v1","labels":{},"namespace":"documentation-placeholder","spec":{},"status":{}}}` | Gateway resources keyed by resource name. |
+| generic | object | `{"annotations":{},"labels":{}}` | Shared metadata and templating values compatible with nxs-universal-chart. |
+| global | object | `{}` | Compatibility values inherited from umbrella charts. |
+| nameOverride | string | `""` | Override the default chart label name if needed. |
+| peerauthentications | object | `{"__helm_docs_example__":{"annotations":{},"apiVersion":"security.istio.io/v1","labels":{},"namespace":"documentation-placeholder","spec":{},"status":{}}}` | PeerAuthentication resources keyed by resource name. |
+| proxyconfigs | object | `{"__helm_docs_example__":{"annotations":{},"apiVersion":"networking.istio.io/v1beta1","labels":{},"namespace":"documentation-placeholder","spec":{},"status":{}}}` | ProxyConfig resources keyed by resource name. |
+| requestauthentications | object | `{"__helm_docs_example__":{"annotations":{},"apiVersion":"security.istio.io/v1","labels":{},"namespace":"documentation-placeholder","spec":{},"status":{}}}` | RequestAuthentication resources keyed by resource name. |
+| serviceentries | object | `{"__helm_docs_example__":{"annotations":{},"apiVersion":"networking.istio.io/v1","labels":{},"namespace":"documentation-placeholder","spec":{},"status":{}}}` | ServiceEntry resources keyed by resource name. |
+| sidecars | object | `{"__helm_docs_example__":{"annotations":{},"apiVersion":"networking.istio.io/v1","labels":{},"namespace":"documentation-placeholder","spec":{},"status":{}}}` | Sidecar resources keyed by resource name. |
+| telemetries | object | `{"__helm_docs_example__":{"annotations":{},"apiVersion":"telemetry.istio.io/v1","labels":{},"namespace":"documentation-placeholder","spec":{},"status":{}}}` | Telemetry resources keyed by resource name. |
+| virtualservices | object | `{"__helm_docs_example__":{"annotations":{},"apiVersion":"networking.istio.io/v1","labels":{},"namespace":"documentation-placeholder","spec":{},"status":{}}}` | VirtualService resources keyed by resource name. |
+| wasmplugins | object | `{"__helm_docs_example__":{"annotations":{},"apiVersion":"extensions.istio.io/v1alpha1","labels":{},"namespace":"documentation-placeholder","spec":{},"status":{}}}` | WasmPlugin resources keyed by resource name. |
+| workloadentries | object | `{"__helm_docs_example__":{"annotations":{},"apiVersion":"networking.istio.io/v1","labels":{},"namespace":"documentation-placeholder","spec":{},"status":{}}}` | WorkloadEntry resources keyed by resource name. |
+| workloadgroups | object | `{"__helm_docs_example__":{"annotations":{},"apiVersion":"networking.istio.io/v1","labels":{},"namespace":"documentation-placeholder","spec":{},"status":{}}}` | WorkloadGroup resources keyed by resource name. |
 
 ## Representative Values Files
 
